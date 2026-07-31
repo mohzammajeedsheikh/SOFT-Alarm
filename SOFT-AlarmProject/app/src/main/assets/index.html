@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoftAlarm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Color tokens ----------
+     cream:  #FFF8F2  (page background)
+     peach:  #FFDCC2  (gradient top)
+     blush:  #FFB6AE  (gradient bottom)
+     plum:   #3D2C3A  (main text)
+     coral:  #FF7A5C  (primary accent / buttons)
+     mauve:  #9C7A9E  (secondary accent / muted text)
+  */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(160deg, #FFF8F2 0%, #FFDCC2 45%, #FFB6AE 100%);
+    min-height: 100vh;
+    color: #3D2C3A;
+    display: flex;
+    justify-content: center;
+    padding: 24px 16px 100px;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  /* ---- Header ---- */
+  header {
+    text-align: center;
+    margin-bottom: 22px;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 28px;
+    color: #3D2C3A;
+  }
+
+  .logo .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #FF7A5C;
+    box-shadow: 0 0 0 4px rgba(255,122,92,0.25);
+  }
+
+  header p {
+    margin-top: 4px;
+    font-size: 13.5px;
+    color: #7A5C6E;
+  }
+
+  /* ---- Live clock card ---- */
+  .clock-card {
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(6px);
+    border-radius: 24px;
+    padding: 26px 20px;
+    text-align: center;
+    margin-bottom: 26px;
+    border: 1px solid rgba(255,255,255,0.6);
+  }
+
+  .clock-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 42px;
+    letter-spacing: 1px;
+    color: #3D2C3A;
+  }
+
+  .clock-date {
+    margin-top: 4px;
+    font-size: 13px;
+    color: #9C7A9E;
+    font-weight: 500;
+  }
+
+  /* ---- Section label ---- */
+  .section-label {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #9C7A9E;
+    font-weight: 600;
+    margin-bottom: 10px;
+    padding-left: 4px;
+  }
+
+  /* ---- Alarm list ---- */
+  .alarm-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .alarm-card {
+    background: rgba(255,255,255,0.7);
+    border-radius: 18px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid rgba(255,255,255,0.7);
+    transition: opacity 0.2s;
+  }
+
+  .alarm-card.disabled { opacity: 0.5; }
+
+  .alarm-info { display: flex; flex-direction: column; cursor: pointer; }
+
+  .alarm-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 22px;
+  }
+
+  .alarm-meta {
+    font-size: 12.5px;
+    color: #9C7A9E;
+    margin-top: 2px;
+  }
+
+  .alarm-actions { display: flex; align-items: center; gap: 10px; }
+
+  .delete-btn {
+    border: none;
+    background: none;
+    color: #C98B84;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+  }
+
+  /* ---- Toggle switch ---- */
+  .switch {
+    position: relative;
+    width: 46px;
+    height: 26px;
+    flex-shrink: 0;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #E3D3DE;
+    border-radius: 999px;
+    transition: 0.2s;
+  }
+  .slider::before {
+    content: "";
+    position: absolute;
+    width: 20px; height: 20px;
+    left: 3px; top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  input:checked + .slider { background: #FF7A5C; }
+  input:checked + .slider::before { transform: translateX(20px); }
+
+  /* ---- Empty state ---- */
+  .empty {
+    text-align: center;
+    padding: 36px 16px;
+    color: #9C7A9E;
+    font-size: 14px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 18px;
+  }
+
+  /* ---- Floating add button ---- */
+  .add-btn {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #FF7A5C;
+    color: white;
+    border: none;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    font-size: 28px;
+    box-shadow: 0 8px 20px rgba(255,122,92,0.45);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .add-btn:active { transform: translateX(-50%) scale(0.94); }
+
+  /* ---- Modal ---- */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(61,44,58,0.45);
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 10;
+  }
+  .overlay.open { display: flex; }
+
+  .sheet {
+    background: #FFF8F2;
+    width: 100%;
+    max-width: 420px;
+    border-radius: 24px 24px 0 0;
+    padding: 24px 22px 28px;
+  }
+
+  .sheet h2 {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 20px;
+    margin-bottom: 18px;
+  }
+
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-size: 12.5px;
+    color: #9C7A9E;
+    font-weight: 600;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .field input[type="time"],
+  .field input[type="text"],
+  .field select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1.5px solid #F0D9CE;
+    font-size: 16px;
+    font-family: inherit;
+    background: white;
+    color: #3D2C3A;
+  }
+
+  .days {
+    display: flex;
+    gap: 6px;
+  }
+  .day-chip {
+    flex: 1;
+    text-align: center;
+    padding: 9px 0;
+    border-radius: 10px;
+    background: white;
+    border: 1.5px solid #F0D9CE;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #9C7A9E;
+    cursor: pointer;
+    user-select: none;
+  }
+  .day-chip.active {
+    background: #FF7A5C;
+    border-color: #FF7A5C;
+    color: white;
+  }
+
+  .sheet-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 22px;
+  }
+  .sheet-actions button {
+    flex: 1;
+    padding: 13px;
+    border-radius: 14px;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-cancel { background: #F0E1DA; color: #7A5C6E; }
+  .btn-save { background: #FF7A5C; color: white; }
+
+  /* ---- Ringing banner ---- */
+  .ringing {
+    display: none;
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #3D2C3A;
+    color: white;
+    padding: 14px 20px;
+    border-radius: 14px;
+    font-size: 14px;
+    z-index: 20;
+    display: none;
+    align-items: center;
+    gap: 12px;
+  }
+  .ringing.show { display: flex; }
+  .ringing button {
+    background: #FF7A5C;
+    border: none;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="logo"><span class="dot"></span>SoftAlarm</div>
+    <p>Gentle reminders, wherever you are</p>
+  </header>
+
+  <div class="clock-card">
+    <div class="clock-time" id="clockTime">--:--</div>
+    <div class="clock-date" id="clockDate">Loading…</div>
+  </div>
+
+  <div class="section-label">Your alarms</div>
+  <div class="alarm-list" id="alarmList"></div>
+</div>
+
+<button class="add-btn" id="openAdd">+</button>
+
+<!-- Add alarm sheet -->
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <h2>New alarm</h2>
+    <div class="field">
+      <label>Time</label>
+      <input type="time" id="inputTime">
+    </div>
+    <div class="field">
+      <label>Label</label>
+      <input type="text" id="inputLabel" placeholder="e.g. Morning walk">
+    </div>
+    <div class="field">
+      <label>Voice</label>
+      <select id="inputVoice">
+        <option value="default">Default alarm tone</option>
+        <option value="mother">Mother · والدہ محترمہ</option>
+        <option value="father">Father · والد محترم</option>
+        <option value="teacher">Teacher · استاد</option>
+        <option value="brother">Brother · بھائی</option>
+        <option value="sister">Sister · بہن</option>
+        <option value="son">Son · بیٹا</option>
+        <option value="daughter">Daughter · بیٹی</option>
+        <option value="husband">Husband · خاوند</option>
+        <option value="wife">Wife · بیوی</option>
+        <option value="friend">Friend · دوست</option>
+        <option value="motivational">Motivational · حوصلہ افزا</option>
+        <option value="worker">Worker · کارکن</option>
+        <option value="boss">Boss · باس</option>
+        <option value="azan">Azan · اذان</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Repeat</label>
+      <div class="days" id="dayChips">
+        <div class="day-chip" data-day="0">S</div>
+        <div class="day-chip" data-day="1">M</div>
+        <div class="day-chip" data-day="2">T</div>
+        <div class="day-chip" data-day="3">W</div>
+        <div class="day-chip" data-day="4">T</div>
+        <div class="day-chip" data-day="5">F</div>
+        <div class="day-chip" data-day="6">S</div>
+      </div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" id="cancelAdd">Cancel</button>
+      <button class="btn-save" id="saveAdd">Save alarm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ringing banner -->
+<div class="ringing" id="ringing">
+  <span id="ringingText">Alarm ringing</span>
+  <button id="dismissRing">Dismiss</button>
+</div>
+
+<script>
+  // ---------- Simple in-app state ----------
+  // Each alarm looks like: { id, time: "07:30", label: "Wake up", days: [0,1,2], enabled: true, voice: "mother" }
+  let alarms = [];
+  const dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+  // ---------- Voice sound files ----------
+  // DEVELOPER: drop your mp3 files into an "assets/audio" folder next to this html file,
+  // then put the matching file name below. Keep the key names on the left exactly as they are —
+  // only change the file path/name on the right to match your own mp3 file.
+  // Example: mother: 'assets/audio/mother.mp3'
+  const voiceAudioFiles = {
+    default:      null, // leave as null to use the built-in beep sound
+    mother:       'assets/audio/mother.mp3',
+    father:       'assets/audio/father.mp3',
+    teacher:      'assets/audio/teacher.mp3',
+    brother:      'assets/audio/brother.mp3',
+    sister:       'assets/audio/sister.mp3',
+    son:          'assets/audio/son.mp3',
+    daughter:     'assets/audio/daughter.mp3',
+    husband:      'assets/audio/husband.mp3',
+    wife:         'assets/audio/wife.mp3',
+    friend:       'assets/audio/friend.mp3',
+    motivational: 'assets/audio/motivational.mp3',
+    worker:       'assets/audio/worker.mp3',
+    boss:         'assets/audio/boss.mp3',
+    azan:         'assets/audio/azan.mp3'
+  };
+
+  // Friendly names shown on the alarm card (English · Urdu)
+  const voiceLabels = {
+    default: 'Default tone',
+    mother: 'Mother · والدہ محترمہ',
+    father: 'Father · والد محترم',
+    teacher: 'Teacher · استاد',
+    brother: 'Brother · بھائی',
+    sister: 'Sister · بہن',
+    son: 'Son · بیٹا',
+    daughter: 'Daughter · بیٹی',
+    husband: 'Husband · خاوند',
+    wife: 'Wife · بیوی',
+    friend: 'Friend · دوست',
+    motivational: 'Motivational · حوصلہ افزا',
+    worker: 'Worker · کارکن',
+    boss: 'Boss · باس',
+    azan: 'Azan · اذان'
+  };
+
+  // ---------- Load saved alarms when the page opens ----------
+  async function loadAlarms() {
+    try {
+      const result = await window.storage.get('softalarm-alarms', false);
+      alarms = result ? JSON.parse(result.value) : [];
+    } catch (e) {
+      alarms = []; // nothing saved yet, that's fine
+    }
+    renderAlarms();
+  }
+
+  // ---------- Save alarms whenever they change ----------
+  async function saveAlarms() {
+    try {
+      await window.storage.set('softalarm-alarms', JSON.stringify(alarms), false);
+    } catch (e) {
+      console.error('Could not save alarms', e);
+    }
+  }
+
+  // ---------- Draw the live clock ----------
+  function updateClock() {
+    const now = new Date();
+    let h = now.getHours();
+    const m = now.getMinutes().toString().padStart(2, '0');
+    const s = now.getSeconds().toString().padStart(2, '0');
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12; if (h === 0) h = 12;
+    document.getElementById('clockTime').textContent = `${h}:${m}:${s} ${ampm}`;
+    document.getElementById('clockDate').textContent = now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+    checkAlarms(now);
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // ---------- Turn "07:30" + today's weekday into a friendly line ----------
+  function describeAlarm(alarm) {
+    if (alarm.days.length === 0) return 'Once';
+    if (alarm.days.length === 7) return 'Every day';
+    return alarm.days.sort().map(d => dayNames[d]).join(' ');
+  }
+
+  // ---------- Render the alarm list ----------
+  function renderAlarms() {
+    const list = document.getElementById('alarmList');
+    list.innerHTML = '';
+
+    if (alarms.length === 0) {
+      list.innerHTML = '<div class="empty">No alarms yet. Tap + to add a gentle wake-up.</div>';
+      return;
+    }
+
+    alarms
+      .slice()
+      .sort((a, b) => a.time.localeCompare(b.time))
+      .forEach(alarm => {
+        const [hh, mm] = alarm.time.split(':').map(Number);
+        const ampm = hh >= 12 ? 'PM' : 'AM';
+        const displayHour = ((hh % 12) || 12);
+        const card = document.createElement('div');
+        card.className = 'alarm-card' + (alarm.enabled ? '' : ' disabled');
+        card.innerHTML = `
+          <div class="alarm-info">
+            <div class="alarm-time">${displayHour}:${mm.toString().padStart(2,'0')} ${ampm}</div>
+            <div class="alarm-meta">${alarm.label ? alarm.label + ' · ' : ''}${describeAlarm(alarm)} · ${voiceLabels[alarm.voice] || 'Default tone'}</div>
+          </div>
+          <div class="alarm-actions">
+            <button class="delete-btn" data-id="${alarm.id}" title="Delete">✕</button>
+            <label class="switch">
+              <input type="checkbox" data-id="${alarm.id}" class="toggle" ${alarm.enabled ? 'checked' : ''}>
+              <span class="slider"></span>
+            </label>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+
+    // Wire up toggle switches
+    document.querySelectorAll('.toggle').forEach(el => {
+      el.addEventListener('change', () => {
+        const alarm = alarms.find(a => a.id === el.dataset.id);
+        alarm.enabled = el.checked;
+        saveAlarms();
+        renderAlarms();
+      });
+    });
+
+    // Wire up delete buttons
+    document.querySelectorAll('.delete-btn').forEach(el => {
+      el.addEventListener('click', () => {
+        alarms = alarms.filter(a => a.id !== el.dataset.id);
+        saveAlarms();
+        renderAlarms();
+      });
+    });
+  }
+
+  // ---------- Add alarm sheet ----------
+  const overlay = document.getElementById('overlay');
+  const dayChips = document.querySelectorAll('.day-chip');
+  let selectedDays = [];
+
+  document.getElementById('openAdd').addEventListener('click', () => {
+    document.getElementById('inputTime').value = '';
+    document.getElementById('inputLabel').value = '';
+    document.getElementById('inputVoice').value = 'default';
+    selectedDays = [];
+    dayChips.forEach(c => c.classList.remove('active'));
+    overlay.classList.add('open');
+  });
+
+  document.getElementById('cancelAdd').addEventListener('click', () => {
+    overlay.classList.remove('open');
+  });
+
+  dayChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const day = Number(chip.dataset.day);
+      if (selectedDays.includes(day)) {
+        selectedDays = selectedDays.filter(d => d !== day);
+        chip.classList.remove('active');
+      } else {
+        selectedDays.push(day);
+        chip.classList.add('active');
+      }
+    });
+  });
+
+  document.getElementById('saveAdd').addEventListener('click', () => {
+    const time = document.getElementById('inputTime').value;
+    if (!time) { alert('Please choose a time for the alarm.'); return; }
+    const label = document.getElementById('inputLabel').value.trim();
+    const voice = document.getElementById('inputVoice').value;
+    alarms.push({
+      id: Date.now().toString(),
+      time,
+      label,
+      voice,
+      days: selectedDays.slice(),
+      enabled: true
+    });
+    saveAlarms();
+    renderAlarms();
+    overlay.classList.remove('open');
+  });
+
+  // ---------- Check every second if an alarm should ring ----------
+  let lastRingMinute = null;
+  function checkAlarms(now) {
+    const hh = now.getHours().toString().padStart(2, '0');
+    const mm = now.getMinutes().toString().padStart(2, '0');
+    const nowTime = `${hh}:${mm}`;
+    const nowDay = now.getDay();
+    const minuteKey = nowTime + '-' + now.getSeconds();
+
+    if (now.getSeconds() !== 0) return; // only check once per minute, at :00
+
+    alarms.forEach(alarm => {
+      if (!alarm.enabled) return;
+      if (alarm.time !== nowTime) return;
+      const daysMatch = alarm.days.length === 0 || alarm.days.includes(nowDay);
+      if (!daysMatch) return;
+      if (lastRingMinute === nowTime) return; // avoid ringing twice in the same minute
+      ringAlarm(alarm);
+    });
+    lastRingMinute = nowTime;
+  }
+
+  function ringAlarm(alarm) {
+    const banner = document.getElementById('ringing');
+    document.getElementById('ringingText').textContent =
+      (alarm.label ? alarm.label : 'Alarm') + ' — ' + alarm.time;
+    banner.classList.add('show');
+    playAlarmSound(alarm.voice);
+  }
+
+  // Plays the mp3 that matches the alarm's chosen voice.
+  // If that voice has no file yet (or the file fails to load), it falls back to the built-in beep.
+  function playAlarmSound(voiceKey) {
+    const filePath = voiceAudioFiles[voiceKey];
+    if (filePath) {
+      const audio = new Audio(filePath);
+      audio.play().catch(() => playBeep()); // file missing or can't play -> beep instead
+    } else {
+      playBeep();
+    }
+  }
+
+  // simple beep using the Web Audio API, no external sound file needed
+  function playBeep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      osc.frequency.value = 880;
+      osc.connect(ctx.destination);
+      osc.start();
+      setTimeout(() => osc.stop(), 500);
+    } catch (e) { /* audio not available, ignore */ }
+  }
+
+  document.getElementById('dismissRing').addEventListener('click', () => {
+    document.getElementById('ringing').classList.remove('show');
+  });
+
+  // ---------- Start ----------
+  loadAlarms();
+</script>
+
+</body>
+</html>
