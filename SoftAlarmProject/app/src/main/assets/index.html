@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soft Alarm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-dawn: #FFF3EC;
+    --rose: #FF8FA3;
+    --plum: #3D2C3E;
+    --gold: #F4A259;
+    --mauve: #6B4E71;
+    --card-bg: #FFFFFF;
+    --shadow: 0 10px 30px rgba(61,44,62,0.08);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Poppins', sans-serif;
+    background: linear-gradient(180deg, #FFF3EC 0%, #FFE3D6 45%, #FFD9CE 100%);
+    color: var(--plum);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding: 24px 16px 80px;
+  }
+  .app{ width:100%; max-width:460px; }
+
+  header{ text-align:center; margin-bottom: 22px; }
+  .brand{
+    font-family:'Fraunces', serif;
+    font-style: italic;
+    font-weight:500;
+    font-size: 1.9rem;
+    color: var(--plum);
+    letter-spacing: 0.2px;
+  }
+  .brand span{ color: var(--rose); font-style: normal; font-weight:600;}
+  .tagline{ font-size:0.8rem; color: var(--mauve); margin-top:2px; letter-spacing:0.5px;}
+
+  .clock-card{
+    background: var(--card-bg);
+    border-radius: 28px;
+    padding: 28px 20px 22px;
+    text-align:center;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    position:relative;
+    overflow:hidden;
+  }
+  .clock-card::before{
+    content:"";
+    position:absolute; top:-40%; left:50%; transform:translateX(-50%);
+    width:220px; height:220px; border-radius:50%;
+    background: radial-gradient(circle, rgba(244,162,89,0.35), rgba(255,143,163,0.0) 70%);
+  }
+  .time-display{
+    font-family:'Fraunces', serif;
+    font-size: 3.1rem;
+    font-weight:600;
+    letter-spacing: 1px;
+    position:relative;
+  }
+  .date-display{ color: var(--mauve); font-size:0.85rem; margin-top:6px; position:relative;}
+  .trial-pill{
+    display:inline-block; margin-top:14px; padding:6px 14px;
+    background: rgba(255,143,163,0.15); color:#B23A54;
+    border-radius: 20px; font-size:0.72rem; font-weight:500; position:relative;
+  }
+
+  .section-label{
+    font-size:0.72rem; text-transform:uppercase; letter-spacing:1.5px;
+    color: var(--mauve); margin: 22px 4px 10px; font-weight:600;
+  }
+
+  .alarm-card{
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 16px 18px;
+    display:flex; align-items:center; justify-content:space-between;
+    box-shadow: var(--shadow);
+    margin-bottom: 12px;
+    border-left: 5px solid var(--rose);
+  }
+  .alarm-card.off{ border-left-color:#E5DCD8; opacity:0.55; }
+  .alarm-left{ display:flex; flex-direction:column; gap:2px; }
+  .alarm-time{ font-family:'Fraunces', serif; font-size:1.5rem; font-weight:600;}
+  .alarm-meta{ font-size:0.72rem; color: var(--mauve); display:flex; gap:8px; align-items:center;}
+  .voice-tag{
+    background: rgba(244,162,89,0.18); color:#8A5A1E; padding:2px 9px;
+    border-radius: 12px; font-weight:500;
+  }
+  .alarm-actions{ display:flex; align-items:center; gap:10px; }
+  .switch{ position:relative; width:42px; height:24px; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .slider{
+    position:absolute; cursor:pointer; inset:0; background:#E5DCD8;
+    transition:.2s; border-radius:24px;
+  }
+  .slider::before{
+    content:""; position:absolute; width:18px; height:18px; left:3px; bottom:3px;
+    background:white; transition:.2s; border-radius:50%;
+  }
+  input:checked + .slider{ background: var(--rose); }
+  input:checked + .slider::before{ transform: translateX(18px); }
+  .icon-btn{
+    background:none; border:none; cursor:pointer; font-size:1rem; color:var(--mauve);
+    padding:4px;
+  }
+  .empty-state{
+    text-align:center; padding: 26px 10px; color: var(--mauve); font-size:0.85rem;
+    background: rgba(255,255,255,0.5); border-radius:18px; border: 1.5px dashed #E5B9A6;
+  }
+
+  .fab{
+    position:fixed; bottom:26px; left:50%; transform:translateX(-50%);
+    width: 92%; max-width: 420px;
+    background: linear-gradient(135deg, var(--rose), var(--gold));
+    color:white; border:none; border-radius: 18px; padding:15px;
+    font-family:'Poppins'; font-weight:600; font-size:0.95rem; letter-spacing:0.3px;
+    box-shadow: 0 8px 22px rgba(255,143,163,0.45);
+    cursor:pointer;
+  }
+  .fab:active{ transform: translateX(-50%) scale(0.98); }
+
+  /* Modal */
+  .overlay{
+    position:fixed; inset:0; background: rgba(61,44,62,0.45);
+    display:none; align-items:flex-end; justify-content:center; z-index:50;
+  }
+  .overlay.show{ display:flex; }
+  .modal{
+    background: var(--bg-dawn); width:100%; max-width:460px;
+    border-radius: 26px 26px 0 0; padding: 24px 22px 30px;
+    max-height:88vh; overflow-y:auto;
+  }
+  .modal h2{ font-family:'Fraunces', serif; font-size:1.4rem; margin-bottom:16px; }
+  label{ font-size:0.75rem; color:var(--mauve); font-weight:600; display:block; margin: 14px 0 6px; text-transform:uppercase; letter-spacing:0.6px;}
+  input[type="time"], input[type="text"], select{
+    width:100%; padding:12px 14px; border-radius:14px; border:1.5px solid #F0DCD4;
+    font-family:'Poppins'; font-size:0.95rem; background:white; color:var(--plum);
+  }
+  .days-row{ display:flex; gap:6px; flex-wrap:wrap; }
+  .day-chip{
+    padding:8px 0; width:38px; text-align:center; border-radius:10px; background:white;
+    border:1.5px solid #F0DCD4; font-size:0.75rem; cursor:pointer; user-select:none;
+  }
+  .day-chip.active{ background: var(--rose); color:white; border-color:var(--rose); }
+  .modal-actions{ display:flex; gap:10px; margin-top:22px; }
+  .btn{ flex:1; padding:13px; border-radius:14px; border:none; font-weight:600; font-family:'Poppins'; cursor:pointer; }
+  .btn-primary{ background: var(--plum); color:white; }
+  .btn-ghost{ background:transparent; color:var(--mauve); border:1.5px solid #E5DCD8; }
+
+  /* Alarm ringing screen */
+  .ring-screen{
+    position:fixed; inset:0; background: linear-gradient(160deg,#3D2C3E, #6B4E71);
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    color:white; z-index:100; text-align:center; padding:20px;
+  }
+  .ring-screen.show{ display:flex; }
+  .ring-heart{ font-size:3rem; margin-bottom:6px; animation: pulse 1.2s infinite; }
+  @keyframes pulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.15);} }
+  .ring-time{ font-family:'Fraunces', serif; font-size:3rem; font-weight:600; }
+  .ring-label{ font-size:1rem; margin-top:6px; opacity:0.85; }
+  .ring-msg{ margin-top:18px; font-size:0.95rem; max-width:320px; opacity:0.9; font-style:italic; }
+  .ring-actions{ display:flex; gap:14px; margin-top:34px; }
+  .ring-btn{ padding:14px 26px; border-radius:16px; border:none; font-weight:600; cursor:pointer; font-family:'Poppins';}
+  .snooze{ background: rgba(255,255,255,0.15); color:white; }
+  .dismiss{ background: var(--gold); color:var(--plum); }
+
+  /* Lock / paywall */
+  .lock-screen{
+    position:fixed; inset:0; background: linear-gradient(180deg,#FFF3EC,#FFD9CE);
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    z-index:200; padding:30px; text-align:center;
+  }
+  .lock-screen.show{ display:flex; }
+  .lock-heart{ font-size:2.6rem; margin-bottom:10px; }
+  .lock-title{ font-family:'Fraunces', serif; font-size:1.6rem; margin-bottom:8px; }
+  .lock-sub{ color:var(--mauve); font-size:0.9rem; max-width:300px; margin-bottom:24px; }
+  .price-card{
+    background:white; border-radius:22px; padding:22px 26px; box-shadow:var(--shadow);
+    margin-bottom:22px;
+  }
+  .price-tag{ font-family:'Fraunces', serif; font-size:2.1rem; font-weight:600; color:var(--plum); }
+  .price-note{ font-size:0.78rem; color:var(--mauve); margin-top:4px; }
+  .buy-btn{
+    background: linear-gradient(135deg, var(--rose), var(--gold)); color:white; border:none;
+    padding:15px 34px; border-radius:16px; font-weight:600; font-size:0.95rem; cursor:pointer;
+    box-shadow: 0 8px 22px rgba(255,143,163,0.45); width:100%;
+  }
+  .redeem-row{ display:flex; gap:8px; margin-top:14px; width:100%; max-width:320px; }
+  .redeem-row input{ flex:1; }
+  .redeem-row button{ padding:0 16px; border-radius:12px; border:none; background:var(--plum); color:white; font-weight:600; }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <header>
+    <div class="brand">Wake Up With <span>Love</span></div>
+    <div class="tagline">Every morning, a voice that loves you</div>
+  </header>
+
+  <div class="clock-card">
+    <div class="time-display" id="liveTime">--:--</div>
+    <div class="date-display" id="liveDate">Loading date…</div>
+    <div class="trial-pill" id="trialPill">Free trial</div>
+  </div>
+
+  <div class="section-label">Your Alarms</div>
+  <div id="alarmList"></div>
+</div>
+
+<button class="fab" id="addAlarmBtn">+ Add a loving alarm</button>
+
+<!-- Add/Edit Alarm Modal -->
+<div class="overlay" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">New Alarm</h2>
+
+    <label>Time</label>
+    <input type="time" id="inputTime" value="07:00">
+
+    <label>Label</label>
+    <input type="text" id="inputLabel" placeholder="e.g. Morning workout">
+
+    <label>Repeat</label>
+    <div class="days-row" id="daysRow">
+      <div class="day-chip" data-day="0">S</div>
+      <div class="day-chip" data-day="1">M</div>
+      <div class="day-chip" data-day="2">T</div>
+      <div class="day-chip" data-day="3">W</div>
+      <div class="day-chip" data-day="4">T</div>
+      <div class="day-chip" data-day="5">F</div>
+      <div class="day-chip" data-day="6">S</div>
+    </div>
+
+    <label>Wake-up voice</label>
+    <select id="inputVoice">
+      <option value="mother">Mother's Love</option>
+      <option value="father">Father's Strength</option>
+      <option value="partner">Partner's Warmth</option>
+      <option value="sibling">Sibling's Cheer</option>
+      <option value="custom">Custom Voice</option>
+    </select>
+
+    <label>Wake-up message</label>
+    <input type="text" id="inputMessage" placeholder="Good morning, sunshine! Time to rise and shine.">
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveBtn">Save Alarm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ringing screen -->
+<div class="ring-screen" id="ringScreen">
+  <div class="ring-heart">💗</div>
+  <div class="ring-time" id="ringTime">07:00</div>
+  <div class="ring-label" id="ringLabel">Wake up alarm</div>
+  <div class="ring-msg" id="ringMsg">Good morning, my love. Rise and shine!</div>
+  <div class="ring-actions">
+    <button class="ring-btn snooze" id="snoozeBtn">Snooze 5 min</button>
+    <button class="ring-btn dismiss" id="dismissBtn">I'm up 💛</button>
+  </div>
+</div>
+
+<!-- Paywall / lock screen -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-heart">🔒💗</div>
+  <div class="lock-title">Your free trial has ended</div>
+  <div class="lock-sub">You've enjoyed 7 mornings of loving wake-up calls. Unlock forever with a one-time purchase.</div>
+  <div class="price-card">
+    <div class="price-tag">₹50</div>
+    <div class="price-note">One-time payment · Lifetime access</div>
+  </div>
+  <button class="buy-btn" id="buyBtn">Purchase 1 Time · Enjoy Lifetime</button>
+  <div class="redeem-row">
+    <input type="text" id="redeemCode" placeholder="Have an unlock code?">
+    <button id="redeemBtn">Unlock</button>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   Soft Alarm — app logic
+   -------------------------------------------------------------------------
+   DEVELOPER INTEGRATION POINTS (search these tags in this file):
+   [DEV:AUDIO]    -> wire real recorded voice files per persona
+   [DEV:PAYMENT]  -> wire a real payment gateway (Razorpay/UPI/Stripe etc.)
+   [DEV:UNLOCK]   -> server-side validation of unlock codes / purchase receipts
+   ========================================================================= */
+
+// -------------------- STORAGE HELPERS --------------------
+// NOTE: This app uses localStorage for trial tracking + saved alarms.
+// This works when the file is hosted/opened as a real web app or wrapped
+// in a WebView (Android/iOS). It will NOT persist inside Claude's in-chat
+// preview sandbox — test it after deploying to your own hosting or app shell.
+const store = {
+  get(key, fallback){
+    try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+    catch(e){ return fallback; }
+  },
+  set(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+};
+
+// -------------------- [DEV:AUDIO] VOICE SOURCES --------------------
+// Fill in real recorded audio file URLs per persona here. If a URL is left
+// empty, the app falls back to browser text-to-speech (Web Speech API)
+// using a voice matched to the persona's typical pitch, so the app is
+// fully functional even before real recordings are added.
+const AUDIO_SOURCES = {
+  mother:  "", // e.g. "https://yourcdn.com/voices/mother-wake-up.mp3"
+  father:  "", // e.g. "https://yourcdn.com/voices/father-wake-up.mp3"
+  partner: "",
+  sibling: "",
+  custom:  ""
+};
+
+const VOICE_LABELS = {
+  mother: "Mother's Love",
+  father: "Father's Strength",
+  partner: "Partner's Warmth",
+  sibling: "Sibling's Cheer",
+  custom: "Custom Voice"
+};
+
+// Rough pitch/rate tuning per persona for the TTS fallback
+const TTS_PROFILE = {
+  mother:  { pitch: 1.3, rate: 0.95, genderHint: "female" },
+  father:  { pitch: 0.75, rate: 0.95, genderHint: "male" },
+  partner: { pitch: 1.05, rate: 1.0, genderHint: "female" },
+  sibling: { pitch: 1.15, rate: 1.1, genderHint: "female" },
+  custom:  { pitch: 1.0, rate: 1.0, genderHint: "any" }
+};
+
+// -------------------- TRIAL / LOCK LOGIC --------------------
+const TRIAL_DAYS = 7;
+const TRIAL_START_KEY = "wuwl_trial_start";
+const PURCHASED_KEY = "wuwl_purchased";
+// [DEV:UNLOCK] simple local unlock code for manual/offline redemption.
+// Replace with a server-verified code or payment-webhook driven flag in production.
+const VALID_UNLOCK_CODES = ["LOVE-LIFETIME", "WUWL-VIP"];
+
+function getTrialStart(){
+  let start = store.get(TRIAL_START_KEY, null);
+  if(!start){
+    start = Date.now();
+    store.set(TRIAL_START_KEY, start);
+  }
+  return start;
+}
+
+function isPurchased(){ return store.get(PURCHASED_KEY, false) === true; }
+
+function daysLeft(){
+  const start = getTrialStart();
+  const elapsedMs = Date.now() - start;
+  const elapsedDays = elapsedMs / (1000*60*60*24);
+  return Math.max(0, Math.ceil(TRIAL_DAYS - elapsedDays));
+}
+
+function checkLock(){
+  const left = daysLeft();
+  const pill = document.getElementById("trialPill");
+  if(isPurchased()){
+    pill.textContent = "💗 Lifetime unlocked";
+    document.getElementById("lockScreen").classList.remove("show");
+    return;
+  }
+  pill.textContent = left > 0 ? `${left} day${left===1?"":"s"} left in free trial` : "Trial ended";
+  if(left <= 0){
+    document.getElementById("lockScreen").classList.add("show");
+  }
+}
+
+document.getElementById("buyBtn").addEventListener("click", () => {
+  // [DEV:PAYMENT] Replace this block with a real payment gateway call.
+  // Example (Razorpay, pseudo-code):
+  //   const rzp = new Razorpay({ key: "YOUR_KEY", amount: 5000, currency: "INR",
+  //     handler: function(response){ store.set(PURCHASED_KEY, true); checkLock(); } });
+  //   rzp.open();
+  alert("Connect your payment gateway here (Razorpay/UPI/Stripe). On successful payment, call:\n\nstore.set('wuwl_purchased', true)\n\nThen refresh the lock state.");
+});
+
+document.getElementById("redeemBtn").addEventListener("click", () => {
+  const code = document.getElementById("redeemCode").value.trim().toUpperCase();
+  if(VALID_UNLOCK_CODES.includes(code)){
+    store.set(PURCHASED_KEY, true);
+    checkLock();
+  } else {
+    alert("That code isn't valid. Please check and try again.");
+  }
+});
+
+// -------------------- CLOCK --------------------
+function tickClock(){
+  const now = new Date();
+  document.getElementById("liveTime").textContent =
+    now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  document.getElementById("liveDate").textContent =
+    now.toLocaleDateString([], {weekday:'long', month:'long', day:'numeric'});
+  checkAlarms(now);
+}
+setInterval(tickClock, 1000);
+
+// -------------------- ALARMS DATA --------------------
+const ALARMS_KEY = "wuwl_alarms";
+let alarms = store.get(ALARMS_KEY, []);
+let editingId = null;
+let lastFiredMinute = null;
+
+function saveAlarms(){ store.set(ALARMS_KEY, alarms); renderAlarms(); }
+
+function renderAlarms(){
+  const list = document.getElementById("alarmList");
+  list.innerHTML = "";
+  if(alarms.length === 0){
+    list.innerHTML = `<div class="empty-state">No alarms yet. Add one and let someone's love wake you up tomorrow.</div>`;
+    return;
+  }
+  alarms.sort((a,b) => a.time.localeCompare(b.time));
+  alarms.forEach(a => {
+    const dayNames = ["S","M","T","W","T","F","S"];
+    const daysStr = a.days.length === 7 ? "Every day"
+      : a.days.length === 0 ? "Once"
+      : a.days.map(d=>dayNames[d]).join(" ");
+    const card = document.createElement("div");
+    card.className = "alarm-card" + (a.enabled ? "" : " off");
+    card.innerHTML = `
+      <div class="alarm-left">
+        <div class="alarm-time">${to12h(a.time)}</div>
+        <div class="alarm-meta">
+          <span>${a.label || daysStr}</span>
+          <span class="voice-tag">${VOICE_LABELS[a.voice]}</span>
+        </div>
+      </div>
+      <div class="alarm-actions">
+        <button class="icon-btn" data-edit="${a.id}">✎</button>
+        <button class="icon-btn" data-del="${a.id}">🗑</button>
+        <label class="switch">
+          <input type="checkbox" data-toggle="${a.id}" ${a.enabled ? "checked": ""}>
+          <span class="slider"></span>
+        </label>
+      </div>`;
+    list.appendChild(card);
+  });
+
+  list.querySelectorAll("[data-toggle]").forEach(el => {
+    el.addEventListener("change", e => {
+      const id = e.target.dataset.toggle;
+      alarms = alarms.map(a => a.id === id ? {...a, enabled: e.target.checked} : a);
+      saveAlarms();
+    });
+  });
+  list.querySelectorAll("[data-del]").forEach(el => {
+    el.addEventListener("click", e => {
+      const id = e.target.dataset.del;
+      alarms = alarms.filter(a => a.id !== id);
+      saveAlarms();
+    });
+  });
+  list.querySelectorAll("[data-edit]").forEach(el => {
+    el.addEventListener("click", e => {
+      openModal(e.target.dataset.edit);
+    });
+  });
+}
+
+function to12h(t){
+  const [h,m] = t.split(":").map(Number);
+  const period = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2,"0")} ${period}`;
+}
+
+// -------------------- MODAL --------------------
+const overlay = document.getElementById("modalOverlay");
+document.getElementById("addAlarmBtn").addEventListener("click", () => openModal(null));
+document.getElementById("cancelBtn").addEventListener("click", closeModal);
+
+function openModal(id){
+  editingId = id;
+  document.querySelectorAll(".day-chip").forEach(c => c.classList.remove("active"));
+  if(id){
+    const a = alarms.find(x => x.id === id);
+    document.getElementById("modalTitle").textContent = "Edit Alarm";
+    document.getElementById("inputTime").value = a.time;
+    document.getElementById("inputLabel").value = a.label;
+    document.getElementById("inputVoice").value = a.voice;
+    document.getElementById("inputMessage").value = a.message;
+    a.days.forEach(d => document.querySelector(`.day-chip[data-day="${d}"]`).classList.add("active"));
+  } else {
+    document.getElementById("modalTitle").textContent = "New Alarm";
+    document.getElementById("inputTime").value = "07:00";
+    document.getElementById("inputLabel").value = "";
+    document.getElementById("inputVoice").value = "mother";
+    document.getElementById("inputMessage").value = "";
+  }
+  overlay.classList.add("show");
+}
+function closeModal(){ overlay.classList.remove("show"); editingId = null; }
+
+document.querySelectorAll(".day-chip").forEach(chip => {
+  chip.addEventListener("click", () => chip.classList.toggle("active"));
+});
+
+document.getElementById("saveBtn").addEventListener("click", () => {
+  const time = document.getElementById("inputTime").value;
+  const label = document.getElementById("inputLabel").value.trim();
+  const voice = document.getElementById("inputVoice").value;
+  const message = document.getElementById("inputMessage").value.trim() ||
+    "Good morning, sunshine! Time to rise and shine.";
+  const days = Array.from(document.querySelectorAll(".day-chip.active")).map(c => Number(c.dataset.day));
+
+  if(editingId){
+    alarms = alarms.map(a => a.id === editingId ? {...a, time, label, voice, message, days} : a);
+  } else {
+    alarms.push({ id: "a"+Date.now(), time, label, voice, message, days, enabled: true });
+  }
+  saveAlarms();
+  closeModal();
+});
+
+// -------------------- ALARM FIRING --------------------
+function checkAlarms(now){
+  if(isLocked()) return;
+  const hh = String(now.getHours()).padStart(2,"0");
+  const mm = String(now.getMinutes()).padStart(2,"0");
+  const nowStr = `${hh}:${mm}`;
+  const minuteKey = now.toDateString()+nowStr;
+  if(minuteKey === lastFiredMinute) return;
+
+  const today = now.getDay();
+  const due = alarms.find(a => a.enabled && a.time === nowStr && (a.days.length === 0 || a.days.includes(today)));
+  if(due){
+    lastFiredMinute = minuteKey;
+    fireAlarm(due);
+  }
+}
+
+function isLocked(){
+  return !isPurchased() && daysLeft() <= 0;
+}
+
+let activeAlarm = null;
+function fireAlarm(a){
+  activeAlarm = a;
+  document.getElementById("ringTime").textContent = to12h(a.time);
+  document.getElementById("ringLabel").textContent = a.label || VOICE_LABELS[a.voice];
+  document.getElementById("ringMsg").textContent = a.message;
+  document.getElementById("ringScreen").classList.add("show");
+  playVoice(a);
+}
+
+function playVoice(a){
+  // [DEV:AUDIO] If a real recorded file exists for this persona, play it.
+  const src = AUDIO_SOURCES[a.voice];
+  if(src){
+    const audio = new Audio(src);
+    audio.loop = true;
+    audio.play().catch(()=>{ speakFallback(a); });
+    window.__wuwl_audio = audio;
+  } else {
+    speakFallback(a);
+  }
+}
+
+function speakFallback(a){
+  if(!("speechSynthesis" in window)) return;
+  const profile = TTS_PROFILE[a.voice];
+  const utter = new SpeechSynthesisUtterance(a.message);
+  utter.pitch = profile.pitch;
+  utter.rate = profile.rate;
+  const voices = speechSynthesis.getVoices();
+  const preferred = voices.find(v => profile.genderHint !== "any" &&
+    v.name.toLowerCase().includes(profile.genderHint));
+  if(preferred) utter.voice = preferred;
+  utter.onend = () => {
+    if(document.getElementById("ringScreen").classList.contains("show")){
+      speechSynthesis.speak(utter); // loop until dismissed
+    }
+  };
+  speechSynthesis.speak(utter);
+}
+
+function stopVoice(){
+  speechSynthesis.cancel();
+  if(window.__wuwl_audio){ window.__wuwl_audio.pause(); window.__wuwl_audio = null; }
+}
+
+document.getElementById("dismissBtn").addEventListener("click", () => {
+  stopVoice();
+  document.getElementById("ringScreen").classList.remove("show");
+  activeAlarm = null;
+});
+
+document.getElementById("snoozeBtn").addEventListener("click", () => {
+  stopVoice();
+  document.getElementById("ringScreen").classList.remove("show");
+  if(activeAlarm){
+    const snoozeTime = new Date(Date.now() + 5*60*1000);
+    const hh = String(snoozeTime.getHours()).padStart(2,"0");
+    const mm = String(snoozeTime.getMinutes()).padStart(2,"0");
+    const snoozed = {...activeAlarm, id: "snz"+Date.now(), time: `${hh}:${mm}`, days: [], label: (activeAlarm.label||"Alarm")+" (snoozed)"};
+    alarms.push(snoozed);
+    saveAlarms();
+  }
+  activeAlarm = null;
+});
+
+// -------------------- INIT --------------------
+getTrialStart();
+checkLock();
+renderAlarms();
+tickClock();
+setInterval(checkLock, 60000);
+</script>
+</body>
+</html>
