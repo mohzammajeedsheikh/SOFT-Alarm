@@ -1,624 +1,2066 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ur" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0A1A2F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Soft Alarm">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- PWA Manifest inline -->
+<link rel="manifest" href="manifest.json">
+
 <title>Soft Alarm</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
 <style>
-  :root{
-    --bg-dawn: #FFF3EC;
-    --rose: #FF8FA3;
-    --plum: #3D2C3E;
-    --gold: #F4A259;
-    --mauve: #6B4E71;
-    --card-bg: #FFFFFF;
-    --shadow: 0 10px 30px rgba(61,44,62,0.08);
-  }
-  *{box-sizing:border-box; margin:0; padding:0;}
-  body{
-    font-family:'Poppins', sans-serif;
-    background: linear-gradient(180deg, #FFF3EC 0%, #FFE3D6 45%, #FFD9CE 100%);
-    color: var(--plum);
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    padding: 24px 16px 80px;
-  }
-  .app{ width:100%; max-width:460px; }
+/* ============================================================
+   RESET + ROOT VARS
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  header{ text-align:center; margin-bottom: 22px; }
-  .brand{
-    font-family:'Fraunces', serif;
-    font-style: italic;
-    font-weight:500;
-    font-size: 1.9rem;
-    color: var(--plum);
-    letter-spacing: 0.2px;
-  }
-  .brand span{ color: var(--rose); font-style: normal; font-weight:600;}
-  .tagline{ font-size:0.8rem; color: var(--mauve); margin-top:2px; letter-spacing:0.5px;}
+:root {
+  --bg:         #0A1A2F;
+  --bg-card:    #112240;
+  --bg-card2:   #1A3356;
+  --gold:       #FFB347;
+  --gold2:      #FFD700;
+  --blue:       #4FC3F7;
+  --green:      #66BB6A;
+  --text:       #E8F0FE;
+  --text2:      #8BA7C7;
+  --text3:      #4A6FA5;
+  --divider:    #1E3A5F;
+  --error:      #EF5350;
+  --pro:        #FFD700;
+  --radius:     18px;
+  --safe-bottom: env(safe-area-inset-bottom, 16px);
+}
 
-  .clock-card{
-    background: var(--card-bg);
-    border-radius: 28px;
-    padding: 28px 20px 22px;
-    text-align:center;
-    box-shadow: var(--shadow);
-    margin-bottom: 20px;
-    position:relative;
-    overflow:hidden;
-  }
-  .clock-card::before{
-    content:"";
-    position:absolute; top:-40%; left:50%; transform:translateX(-50%);
-    width:220px; height:220px; border-radius:50%;
-    background: radial-gradient(circle, rgba(244,162,89,0.35), rgba(255,143,163,0.0) 70%);
-  }
-  .time-display{
-    font-family:'Fraunces', serif;
-    font-size: 3.1rem;
-    font-weight:600;
-    letter-spacing: 1px;
-    position:relative;
-  }
-  .date-display{ color: var(--mauve); font-size:0.85rem; margin-top:6px; position:relative;}
-  .trial-pill{
-    display:inline-block; margin-top:14px; padding:6px 14px;
-    background: rgba(255,143,163,0.15); color:#B23A54;
-    border-radius: 20px; font-size:0.72rem; font-weight:500; position:relative;
-  }
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
 
-  .section-label{
-    font-size:0.72rem; text-transform:uppercase; letter-spacing:1.5px;
-    color: var(--mauve); margin: 22px 4px 10px; font-weight:600;
-  }
+/* ============================================================
+   SCREEN SYSTEM - Zero scroll, full viewport pages
+   ============================================================ */
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(60px);
+  transition: opacity .3s ease, transform .3s ease;
+  overflow: hidden;
+}
+.screen.active {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateX(0);
+}
+.screen.exit {
+  opacity: 0;
+  transform: translateX(-60px);
+}
 
-  .alarm-card{
-    background: var(--card-bg);
-    border-radius: 20px;
-    padding: 16px 18px;
-    display:flex; align-items:center; justify-content:space-between;
-    box-shadow: var(--shadow);
-    margin-bottom: 12px;
-    border-left: 5px solid var(--rose);
-  }
-  .alarm-card.off{ border-left-color:#E5DCD8; opacity:0.55; }
-  .alarm-left{ display:flex; flex-direction:column; gap:2px; }
-  .alarm-time{ font-family:'Fraunces', serif; font-size:1.5rem; font-weight:600;}
-  .alarm-meta{ font-size:0.72rem; color: var(--mauve); display:flex; gap:8px; align-items:center;}
-  .voice-tag{
-    background: rgba(244,162,89,0.18); color:#8A5A1E; padding:2px 9px;
-    border-radius: 12px; font-weight:500;
-  }
-  .alarm-actions{ display:flex; align-items:center; gap:10px; }
-  .switch{ position:relative; width:42px; height:24px; }
-  .switch input{ opacity:0; width:0; height:0; }
-  .slider{
-    position:absolute; cursor:pointer; inset:0; background:#E5DCD8;
-    transition:.2s; border-radius:24px;
-  }
-  .slider::before{
-    content:""; position:absolute; width:18px; height:18px; left:3px; bottom:3px;
-    background:white; transition:.2s; border-radius:50%;
-  }
-  input:checked + .slider{ background: var(--rose); }
-  input:checked + .slider::before{ transform: translateX(18px); }
-  .icon-btn{
-    background:none; border:none; cursor:pointer; font-size:1rem; color:var(--mauve);
-    padding:4px;
-  }
-  .empty-state{
-    text-align:center; padding: 26px 10px; color: var(--mauve); font-size:0.85rem;
-    background: rgba(255,255,255,0.5); border-radius:18px; border: 1.5px dashed #E5B9A6;
-  }
+/* ============================================================
+   TOPBAR
+   ============================================================ */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 52px 20px 14px;
+  flex-shrink: 0;
+}
+.topbar-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.3;
+}
+.topbar-sub {
+  font-size: 12px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+.pro-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all .2s;
+}
+.pro-badge.free {
+  background: var(--bg-card);
+  color: var(--text2);
+  border: 1px solid var(--divider);
+}
+.pro-badge.pro {
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: var(--bg);
+}
 
-  .fab{
-    position:fixed; bottom:26px; left:50%; transform:translateX(-50%);
-    width: 92%; max-width: 420px;
-    background: linear-gradient(135deg, var(--rose), var(--gold));
-    color:white; border:none; border-radius: 18px; padding:15px;
-    font-family:'Poppins'; font-weight:600; font-size:0.95rem; letter-spacing:0.3px;
-    box-shadow: 0 8px 22px rgba(255,143,163,0.45);
-    cursor:pointer;
-  }
-  .fab:active{ transform: translateX(-50%) scale(0.98); }
+/* ============================================================
+   HOME SCREEN
+   ============================================================ */
+#screen-home .content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 16px;
+  -webkit-overflow-scrolling: touch;
+}
 
-  /* Modal */
-  .overlay{
-    position:fixed; inset:0; background: rgba(61,44,62,0.45);
-    display:none; align-items:flex-end; justify-content:center; z-index:50;
-  }
-  .overlay.show{ display:flex; }
-  .modal{
-    background: var(--bg-dawn); width:100%; max-width:460px;
-    border-radius: 26px 26px 0 0; padding: 24px 22px 30px;
-    max-height:88vh; overflow-y:auto;
-  }
-  .modal h2{ font-family:'Fraunces', serif; font-size:1.4rem; margin-bottom:16px; }
-  label{ font-size:0.75rem; color:var(--mauve); font-weight:600; display:block; margin: 14px 0 6px; text-transform:uppercase; letter-spacing:0.6px;}
-  input[type="time"], input[type="text"], select{
-    width:100%; padding:12px 14px; border-radius:14px; border:1.5px solid #F0DCD4;
-    font-family:'Poppins'; font-size:0.95rem; background:white; color:var(--plum);
-  }
-  .days-row{ display:flex; gap:6px; flex-wrap:wrap; }
-  .day-chip{
-    padding:8px 0; width:38px; text-align:center; border-radius:10px; background:white;
-    border:1.5px solid #F0DCD4; font-size:0.75rem; cursor:pointer; user-select:none;
-  }
-  .day-chip.active{ background: var(--rose); color:white; border-color:var(--rose); }
-  .modal-actions{ display:flex; gap:10px; margin-top:22px; }
-  .btn{ flex:1; padding:13px; border-radius:14px; border:none; font-weight:600; font-family:'Poppins'; cursor:pointer; }
-  .btn-primary{ background: var(--plum); color:white; }
-  .btn-ghost{ background:transparent; color:var(--mauve); border:1.5px solid #E5DCD8; }
+/* Next alarm banner */
+.next-banner {
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-card2));
+  border: 1px solid var(--divider);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  display: none;
+  align-items: center;
+  gap: 14px;
+}
+.next-banner.show { display: flex; }
+.next-banner-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+.next-banner-info { flex: 1; }
+.next-banner-time {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--gold);
+  line-height: 1;
+}
+.next-banner-label {
+  font-size: 12px;
+  color: var(--text2);
+  margin-top: 4px;
+}
 
-  /* Alarm ringing screen */
-  .ring-screen{
-    position:fixed; inset:0; background: linear-gradient(160deg,#3D2C3E, #6B4E71);
-    display:none; flex-direction:column; align-items:center; justify-content:center;
-    color:white; z-index:100; text-align:center; padding:20px;
-  }
-  .ring-screen.show{ display:flex; }
-  .ring-heart{ font-size:3rem; margin-bottom:6px; animation: pulse 1.2s infinite; }
-  @keyframes pulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.15);} }
-  .ring-time{ font-family:'Fraunces', serif; font-size:3rem; font-weight:600; }
-  .ring-label{ font-size:1rem; margin-top:6px; opacity:0.85; }
-  .ring-msg{ margin-top:18px; font-size:0.95rem; max-width:320px; opacity:0.9; font-style:italic; }
-  .ring-actions{ display:flex; gap:14px; margin-top:34px; }
-  .ring-btn{ padding:14px 26px; border-radius:16px; border:none; font-weight:600; cursor:pointer; font-family:'Poppins';}
-  .snooze{ background: rgba(255,255,255,0.15); color:white; }
-  .dismiss{ background: var(--gold); color:var(--plum); }
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  gap: 16px;
+}
+.empty-icon {
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid var(--divider);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+.empty-title { font-size: 20px; font-weight: 700; color: var(--text); }
+.empty-sub { font-size: 14px; color: var(--text2); line-height: 1.6; }
 
-  /* Lock / paywall */
-  .lock-screen{
-    position:fixed; inset:0; background: linear-gradient(180deg,#FFF3EC,#FFD9CE);
-    display:none; flex-direction:column; align-items:center; justify-content:center;
-    z-index:200; padding:30px; text-align:center;
-  }
-  .lock-screen.show{ display:flex; }
-  .lock-heart{ font-size:2.6rem; margin-bottom:10px; }
-  .lock-title{ font-family:'Fraunces', serif; font-size:1.6rem; margin-bottom:8px; }
-  .lock-sub{ color:var(--mauve); font-size:0.9rem; max-width:300px; margin-bottom:24px; }
-  .price-card{
-    background:white; border-radius:22px; padding:22px 26px; box-shadow:var(--shadow);
-    margin-bottom:22px;
-  }
-  .price-tag{ font-family:'Fraunces', serif; font-size:2.1rem; font-weight:600; color:var(--plum); }
-  .price-note{ font-size:0.78rem; color:var(--mauve); margin-top:4px; }
-  .buy-btn{
-    background: linear-gradient(135deg, var(--rose), var(--gold)); color:white; border:none;
-    padding:15px 34px; border-radius:16px; font-weight:600; font-size:0.95rem; cursor:pointer;
-    box-shadow: 0 8px 22px rgba(255,143,163,0.45); width:100%;
-  }
-  .redeem-row{ display:flex; gap:8px; margin-top:14px; width:100%; max-width:320px; }
-  .redeem-row input{ flex:1; }
-  .redeem-row button{ padding:0 16px; border-radius:12px; border:none; background:var(--plum); color:white; font-weight:600; }
+/* Alarm card */
+.alarm-card {
+  background: var(--bg-card);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+  overflow: hidden;
+}
+.alarm-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+  opacity: 0;
+  transition: opacity .2s;
+}
+.alarm-card.active-alarm::before { opacity: 1; }
+.alarm-card.active-alarm { border-color: rgba(255,179,71,.3); }
+
+.alarm-time-big {
+  font-size: 38px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+  letter-spacing: -1px;
+}
+.alarm-ampm {
+  font-size: 14px;
+  color: var(--text2);
+  font-weight: 600;
+  margin-top: 2px;
+}
+.alarm-meta { flex: 1; }
+.alarm-voice {
+  font-size: 14px;
+  color: var(--gold);
+  font-weight: 600;
+}
+.alarm-days {
+  font-size: 12px;
+  color: var(--text2);
+  margin-top: 3px;
+}
+
+/* Toggle switch */
+.toggle {
+  width: 50px; height: 28px;
+  border-radius: 14px;
+  background: var(--divider);
+  position: relative;
+  cursor: pointer;
+  transition: background .25s;
+  flex-shrink: 0;
+  border: none;
+}
+.toggle.on { background: var(--gold); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: white;
+  transition: transform .25s;
+  box-shadow: 0 2px 4px rgba(0,0,0,.3);
+}
+.toggle.on::after { transform: translateX(22px); }
+
+/* FAB */
+.fab {
+  position: absolute;
+  bottom: calc(16px + var(--safe-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: var(--bg);
+  border: none;
+  border-radius: 30px;
+  padding: 0 32px;
+  height: 58px;
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(255,179,71,.4);
+  display: flex; align-items: center; gap: 8px;
+  white-space: nowrap;
+  transition: transform .15s, box-shadow .15s;
+  z-index: 10;
+}
+.fab:active { transform: translateX(-50%) scale(.96); box-shadow: 0 4px 12px rgba(255,179,71,.3); }
+
+/* ============================================================
+   SET ALARM SCREEN
+   ============================================================ */
+#screen-set .content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px 100px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+.save-btn {
+  background: none;
+  border: none;
+  color: var(--gold);
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Time picker */
+.time-picker-wrap {
+  background: var(--bg-card);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius);
+  padding: 0;
+  margin-bottom: 20px;
+  overflow: hidden;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  position: relative;
+}
+.time-picker-wrap::before,
+.time-picker-wrap::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 80px;
+  pointer-events: none;
+  z-index: 2;
+}
+.time-picker-wrap::before {
+  top: 0;
+  background: linear-gradient(to bottom, var(--bg-card), transparent);
+}
+.time-picker-wrap::after {
+  bottom: 0;
+  background: linear-gradient(to top, var(--bg-card), transparent);
+}
+
+.time-col {
+  flex: 1;
+  height: 200px;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.time-col::-webkit-scrollbar { display: none; }
+
+.time-item {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 300;
+  color: var(--text2);
+  scroll-snap-align: center;
+  transition: color .2s, font-size .2s;
+  cursor: pointer;
+}
+.time-item.selected {
+  color: var(--text);
+  font-weight: 700;
+  font-size: 40px;
+}
+.time-sep {
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--gold);
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+/* Gold line selection indicator */
+.time-selection-line {
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 56px;
+  border-top: 1.5px solid rgba(255,179,71,.4);
+  border-bottom: 1.5px solid rgba(255,179,71,.4);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Card sections */
+.card-section {
+  background: var(--bg-card);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.card-label {
+  font-size: 12px;
+  color: var(--text2);
+  margin-bottom: 12px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+/* Voice selector row */
+.voice-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+}
+.voice-emoji-box {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  background: var(--bg-card2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+.voice-name { font-size: 18px; font-weight: 700; color: var(--text); }
+.voice-lang { font-size: 12px; color: var(--text2); margin-top: 3px; }
+.chevron { margin-right: auto; color: var(--text3); font-size: 16px; }
+
+/* Days selector */
+.days-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+.day-btn {
+  flex: 1;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid var(--divider);
+  background: var(--bg-card2);
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.day-btn.sel {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--bg);
+}
+
+/* Label input */
+.label-input {
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 16px;
+  outline: none;
+  padding: 0;
+}
+.label-input::placeholder { color: var(--text3); }
+
+/* Save big button */
+.save-big-btn {
+  position: fixed;
+  bottom: calc(16px + var(--safe-bottom));
+  left: 16px; right: 16px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  height: 58px;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(255,179,71,.3);
+  transition: transform .15s;
+  z-index: 10;
+}
+.save-big-btn:active { transform: scale(.98); }
+
+/* ============================================================
+   VOICE SELECT SCREEN
+   ============================================================ */
+#screen-voice .content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px 40px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0 12px;
+}
+.section-bar {
+  width: 4px; height: 40px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.section-title { font-size: 18px; font-weight: 800; color: var(--text); }
+.section-sub { font-size: 12px; margin-top: 2px; }
+
+.voice-card {
+  background: var(--bg-card);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+}
+.voice-card.selected {
+  border-color: var(--gold);
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-card2));
+  box-shadow: 0 0 20px rgba(255,179,71,.15);
+}
+.voice-card.locked {
+  opacity: .55;
+}
+.vc-emoji {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: var(--bg-card2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+.vc-info { flex: 1; }
+.vc-name { font-size: 18px; font-weight: 700; color: var(--text); }
+.vc-lang { display: inline-block; background: var(--bg); border-radius: 6px; padding: 1px 7px; font-size: 11px; color: var(--text2); margin-top: 3px; }
+.vc-desc { font-size: 12px; color: var(--text2); margin-top: 4px; line-height: 1.4; }
+
+.play-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-card2);
+  color: var(--text2);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+  flex-shrink: 0;
+}
+.play-btn.playing {
+  background: var(--gold);
+  color: var(--bg);
+}
+.check-icon {
+  position: absolute;
+  bottom: 10px; left: 10px;
+  font-size: 16px;
+  color: var(--gold);
+}
+
+/* Upgrade banner */
+.upgrade-banner {
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-card2));
+  border: 1.5px solid rgba(255,215,0,.3);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.upgrade-banner:active { transform: scale(.98); }
+
+/* ============================================================
+   RINGING SCREEN
+   ============================================================ */
+#screen-ring {
+  z-index: 1000;
+  background: linear-gradient(180deg, #051525 0%, #0A1A2F 50%, #0D2444 100%);
+}
+
+.ring-time {
+  text-align: center;
+  padding: 50px 24px 0;
+}
+.ring-clock {
+  font-size: 86px;
+  font-weight: 100;
+  color: var(--text);
+  letter-spacing: -3px;
+  line-height: 1;
+}
+.ring-ampm {
+  font-size: 22px;
+  color: var(--text2);
+  letter-spacing: 4px;
+  margin-top: 6px;
+}
+.ring-voice-name {
+  font-size: 18px;
+  color: var(--gold);
+  font-weight: 600;
+  margin-top: 14px;
+}
+
+.ring-anim {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.ring-circle {
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--bg-card2), var(--bg));
+  border: 3px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 72px;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 0 40px rgba(255,179,71,.3);
+  animation: ringPulse 1.2s ease-in-out infinite;
+}
+@keyframes ringPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(255,179,71,.3); }
+  50% { transform: scale(1.08); box-shadow: 0 0 60px rgba(255,179,71,.5); }
+}
+
+.ring-wave {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(255,179,71,.15);
+  animation: ringWave 2s ease-out infinite;
+}
+.ring-wave:nth-child(2) { animation-delay: .5s; }
+.ring-wave:nth-child(3) { animation-delay: 1s; }
+
+@keyframes ringWave {
+  0% { width: 160px; height: 160px; opacity: .5; }
+  100% { width: 320px; height: 320px; opacity: 0; }
+}
+
+.ring-buttons {
+  padding: 0 24px calc(50px + var(--safe-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stop-btn {
+  height: 72px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: var(--bg);
+  border: none;
+  font-size: 26px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 30px rgba(255,179,71,.5);
+  transition: transform .15s;
+  animation: stopPulse 1s ease-in-out infinite;
+}
+@keyframes stopPulse {
+  0%, 100% { box-shadow: 0 8px 30px rgba(255,179,71,.5); }
+  50% { box-shadow: 0 12px 40px rgba(255,179,71,.7); }
+}
+.stop-btn:active { transform: scale(.96); }
+
+.snooze-btn {
+  height: 58px;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--text2);
+  border: 1px solid var(--divider);
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+.snooze-btn:active { transform: scale(.98); }
+
+/* ============================================================
+   PAYWALL SCREEN
+   ============================================================ */
+#screen-paywall .content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 20px 120px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.paywall-hero {
+  text-align: center;
+  padding: 20px 0 30px;
+}
+.paywall-star { font-size: 56px; }
+.paywall-title { font-size: 26px; font-weight: 800; color: var(--text); margin-top: 12px; line-height: 1.3; }
+.paywall-sub { font-size: 15px; color: var(--text2); margin-top: 10px; line-height: 1.6; }
+
+.feature-list { margin: 10px 0 24px; }
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--divider);
+}
+.feature-item:last-child { border-bottom: none; }
+.feature-icon { font-size: 24px; width: 40px; text-align: center; flex-shrink: 0; }
+.feature-text { font-size: 15px; color: var(--text); }
+.feature-check { margin-right: auto; color: var(--green); font-size: 18px; }
+
+.price-card {
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-card2));
+  border: 1.5px solid rgba(255,215,0,.4);
+  border-radius: 20px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+.price-amount { font-size: 42px; font-weight: 800; color: var(--gold); line-height: 1; }
+.price-label { font-size: 13px; color: var(--text2); margin-top: 4px; }
+.price-note { font-size: 12px; color: var(--text3); margin-top: 8px; }
+
+.buy-btn {
+  position: fixed;
+  bottom: calc(16px + var(--safe-bottom));
+  left: 16px; right: 16px;
+  height: 60px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: var(--bg);
+  border: none;
+  font-size: 19px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(255,179,71,.35);
+  z-index: 10;
+  transition: transform .15s;
+}
+.buy-btn:active { transform: scale(.98); }
+
+.restore-link {
+  display: block;
+  text-align: center;
+  color: var(--text3);
+  font-size: 13px;
+  margin-top: 8px;
+  cursor: pointer;
+  position: fixed;
+  bottom: calc(82px + var(--safe-bottom));
+  left: 0; right: 0;
+}
+
+/* ============================================================
+   AUTH SCREEN
+   ============================================================ */
+#screen-auth .content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 20px 40px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.auth-hero { text-align: center; padding: 20px 0 30px; }
+.auth-icon { font-size: 54px; }
+.auth-title { font-size: 24px; font-weight: 800; color: var(--text); margin-top: 12px; }
+.auth-sub { font-size: 14px; color: var(--text2); margin-top: 8px; }
+
+.auth-form { display: flex; flex-direction: column; gap: 14px; }
+.input-group { display: flex; flex-direction: column; gap: 6px; }
+.input-label { font-size: 13px; color: var(--text2); }
+.text-input {
+  background: var(--bg-card);
+  border: 1px solid var(--divider);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--text);
+  font-size: 16px;
+  outline: none;
+  transition: border-color .2s;
+  width: 100%;
+}
+.text-input:focus { border-color: var(--gold); }
+.auth-btn {
+  height: 54px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: var(--bg);
+  border: none;
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.auth-toggle {
+  text-align: center;
+  color: var(--text2);
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 12px;
+  padding: 10px;
+}
+.auth-toggle span { color: var(--gold); font-weight: 600; }
+.auth-error {
+  color: var(--error);
+  font-size: 13px;
+  text-align: center;
+  padding: 8px;
+  display: none;
+}
+.auth-error.show { display: block; }
+.auth-success {
+  background: rgba(102,187,106,.15);
+  border: 1px solid rgba(102,187,106,.3);
+  border-radius: 12px;
+  padding: 14px;
+  color: var(--green);
+  font-size: 14px;
+  text-align: center;
+  display: none;
+}
+.auth-success.show { display: block; }
+
+/* Signed in state */
+.signed-in-state { text-align: center; padding: 30px 0; }
+.user-avatar {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-card2));
+  border: 2px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px;
+  margin: 0 auto 16px;
+}
+.signout-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--divider);
+  color: var(--text2);
+  border-radius: 12px;
+  padding: 12px 28px;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+/* ============================================================
+   INSTALL PROMPT BANNER
+   ============================================================ */
+.install-banner {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--divider);
+  padding: 16px 20px calc(16px + var(--safe-bottom));
+  display: none;
+  align-items: center;
+  gap: 14px;
+  z-index: 2000;
+  animation: slideUp .3s ease;
+}
+.install-banner.show { display: flex; }
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.install-btn {
+  background: var(--gold);
+  color: var(--bg);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.install-dismiss {
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 20px;
+  cursor: pointer;
+  margin-right: auto;
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+.toast {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: rgba(17,34,64,.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--divider);
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 14px;
+  color: var(--text);
+  z-index: 9999;
+  opacity: 0;
+  transition: all .3s;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ============================================================
+   MISC
+   ============================================================ */
+.divider-line { height: 1px; background: var(--divider); margin: 4px 0; }
 </style>
 </head>
 <body>
 
-<div class="app" id="app">
-  <header>
-    <div class="brand">Wake Up With <span>Love</span></div>
-    <div class="tagline">Every morning, a voice that loves you</div>
-  </header>
+<!-- ═══════════════════════════════════════════════
+     TOAST
+══════════════════════════════════════════════════ -->
+<div class="toast" id="toast"></div>
 
-  <div class="clock-card">
-    <div class="time-display" id="liveTime">--:--</div>
-    <div class="date-display" id="liveDate">Loading date…</div>
-    <div class="trial-pill" id="trialPill">Free trial</div>
-  </div>
-
-  <div class="section-label">Your Alarms</div>
-  <div id="alarmList"></div>
-</div>
-
-<button class="fab" id="addAlarmBtn">+ Add a loving alarm</button>
-
-<!-- Add/Edit Alarm Modal -->
-<div class="overlay" id="modalOverlay">
-  <div class="modal">
-    <h2 id="modalTitle">New Alarm</h2>
-
-    <label>Time</label>
-    <input type="time" id="inputTime" value="07:00">
-
-    <label>Label</label>
-    <input type="text" id="inputLabel" placeholder="e.g. Morning workout">
-
-    <label>Repeat</label>
-    <div class="days-row" id="daysRow">
-      <div class="day-chip" data-day="0">S</div>
-      <div class="day-chip" data-day="1">M</div>
-      <div class="day-chip" data-day="2">T</div>
-      <div class="day-chip" data-day="3">W</div>
-      <div class="day-chip" data-day="4">T</div>
-      <div class="day-chip" data-day="5">F</div>
-      <div class="day-chip" data-day="6">S</div>
+<!-- ═══════════════════════════════════════════════
+     SCREEN 1: HOME
+══════════════════════════════════════════════════ -->
+<div class="screen active" id="screen-home">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Soft Alarm ⏰</div>
+      <div class="topbar-sub">Wake up With Love </div>
     </div>
-
-    <label>Wake-up voice</label>
-    <select id="inputVoice">
-      <option value="mother">Mother's Love</option>
-      <option value="father">Father's Strength</option>
-      <option value="partner">Partner's Warmth</option>
-      <option value="sibling">Sibling's Cheer</option>
-      <option value="custom">Custom Voice</option>
-    </select>
-
-    <label>Wake-up message</label>
-    <input type="text" id="inputMessage" placeholder="Good morning, sunshine! Time to rise and shine.">
-
-    <div class="modal-actions">
-      <button class="btn btn-ghost" id="cancelBtn">Cancel</button>
-      <button class="btn btn-primary" id="saveBtn">Save Alarm</button>
-    </div>
+    <button class="pro-badge free" id="pro-btn" onclick="showScreen('screen-auth')">
+      Login   </button>
   </div>
-</div>
 
-<!-- Ringing screen -->
-<div class="ring-screen" id="ringScreen">
-  <div class="ring-heart">💗</div>
-  <div class="ring-time" id="ringTime">07:00</div>
-  <div class="ring-label" id="ringLabel">Wake up alarm</div>
-  <div class="ring-msg" id="ringMsg">Good morning, my love. Rise and shine!</div>
-  <div class="ring-actions">
-    <button class="ring-btn snooze" id="snoozeBtn">Snooze 5 min</button>
-    <button class="ring-btn dismiss" id="dismissBtn">I'm up 💛</button>
-  </div>
-</div>
-
-<!-- Paywall / lock screen -->
-<div class="lock-screen" id="lockScreen">
-  <div class="lock-heart">🔒💗</div>
-  <div class="lock-title">Your free trial has ended</div>
-  <div class="lock-sub">You've enjoyed 7 mornings of loving wake-up calls. Unlock forever with a one-time purchase.</div>
-  <div class="price-card">
-    <div class="price-tag">₹50</div>
-    <div class="price-note">One-time payment · Lifetime access</div>
-  </div>
-  <button class="buy-btn" id="buyBtn">Purchase 1 Time · Enjoy Lifetime</button>
-  <div class="redeem-row">
-    <input type="text" id="redeemCode" placeholder="Have an unlock code?">
-    <button id="redeemBtn">Unlock</button>
-  </div>
-</div>
-
-<script>
-/* =========================================================================
-   Soft Alarm — app logic
-   -------------------------------------------------------------------------
-   DEVELOPER INTEGRATION POINTS (search these tags in this file):
-   [DEV:AUDIO]    -> wire real recorded voice files per persona
-   [DEV:PAYMENT]  -> wire a real payment gateway (Razorpay/UPI/Stripe etc.)
-   [DEV:UNLOCK]   -> server-side validation of unlock codes / purchase receipts
-   ========================================================================= */
-
-// -------------------- STORAGE HELPERS --------------------
-// NOTE: This app uses localStorage for trial tracking + saved alarms.
-// This works when the file is hosted/opened as a real web app or wrapped
-// in a WebView (Android/iOS). It will NOT persist inside Claude's in-chat
-// preview sandbox — test it after deploying to your own hosting or app shell.
-const store = {
-  get(key, fallback){
-    try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
-    catch(e){ return fallback; }
-  },
-  set(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
-};
-
-// -------------------- [DEV:AUDIO] VOICE SOURCES --------------------
-// Fill in real recorded audio file URLs per persona here. If a URL is left
-// empty, the app falls back to browser text-to-speech (Web Speech API)
-// using a voice matched to the persona's typical pitch, so the app is
-// fully functional even before real recordings are added.
-const AUDIO_SOURCES = {
-  mother:  "", // e.g. "https://yourcdn.com/voices/mother-wake-up.mp3"
-  father:  "", // e.g. "https://yourcdn.com/voices/father-wake-up.mp3"
-  partner: "",
-  sibling: "",
-  custom:  ""
-};
-
-const VOICE_LABELS = {
-  mother: "Mother's Love",
-  father: "Father's Strength",
-  partner: "Partner's Warmth",
-  sibling: "Sibling's Cheer",
-  custom: "Custom Voice"
-};
-
-// Rough pitch/rate tuning per persona for the TTS fallback
-const TTS_PROFILE = {
-  mother:  { pitch: 1.3, rate: 0.95, genderHint: "female" },
-  father:  { pitch: 0.75, rate: 0.95, genderHint: "male" },
-  partner: { pitch: 1.05, rate: 1.0, genderHint: "female" },
-  sibling: { pitch: 1.15, rate: 1.1, genderHint: "female" },
-  custom:  { pitch: 1.0, rate: 1.0, genderHint: "any" }
-};
-
-// -------------------- TRIAL / LOCK LOGIC --------------------
-const TRIAL_DAYS = 7;
-const TRIAL_START_KEY = "wuwl_trial_start";
-const PURCHASED_KEY = "wuwl_purchased";
-// [DEV:UNLOCK] simple local unlock code for manual/offline redemption.
-// Replace with a server-verified code or payment-webhook driven flag in production.
-const VALID_UNLOCK_CODES = ["LOVE-LIFETIME", "WUWL-VIP"];
-
-function getTrialStart(){
-  let start = store.get(TRIAL_START_KEY, null);
-  if(!start){
-    start = Date.now();
-    store.set(TRIAL_START_KEY, start);
-  }
-  return start;
-}
-
-function isPurchased(){ return store.get(PURCHASED_KEY, false) === true; }
-
-function daysLeft(){
-  const start = getTrialStart();
-  const elapsedMs = Date.now() - start;
-  const elapsedDays = elapsedMs / (1000*60*60*24);
-  return Math.max(0, Math.ceil(TRIAL_DAYS - elapsedDays));
-}
-
-function checkLock(){
-  const left = daysLeft();
-  const pill = document.getElementById("trialPill");
-  if(isPurchased()){
-    pill.textContent = "💗 Lifetime unlocked";
-    document.getElementById("lockScreen").classList.remove("show");
-    return;
-  }
-  pill.textContent = left > 0 ? `${left} day${left===1?"":"s"} left in free trial` : "Trial ended";
-  if(left <= 0){
-    document.getElementById("lockScreen").classList.add("show");
-  }
-}
-
-document.getElementById("buyBtn").addEventListener("click", () => {
-  // [DEV:PAYMENT] Replace this block with a real payment gateway call.
-  // Example (Razorpay, pseudo-code):
-  //   const rzp = new Razorpay({ key: "YOUR_KEY", amount: 5000, currency: "INR",
-  //     handler: function(response){ store.set(PURCHASED_KEY, true); checkLock(); } });
-  //   rzp.open();
-  alert("Connect your payment gateway here (Razorpay/UPI/Stripe). On successful payment, call:\n\nstore.set('wuwl_purchased', true)\n\nThen refresh the lock state.");
-});
-
-document.getElementById("redeemBtn").addEventListener("click", () => {
-  const code = document.getElementById("redeemCode").value.trim().toUpperCase();
-  if(VALID_UNLOCK_CODES.includes(code)){
-    store.set(PURCHASED_KEY, true);
-    checkLock();
-  } else {
-    alert("That code isn't valid. Please check and try again.");
-  }
-});
-
-// -------------------- CLOCK --------------------
-function tickClock(){
-  const now = new Date();
-  document.getElementById("liveTime").textContent =
-    now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-  document.getElementById("liveDate").textContent =
-    now.toLocaleDateString([], {weekday:'long', month:'long', day:'numeric'});
-  checkAlarms(now);
-}
-setInterval(tickClock, 1000);
-
-// -------------------- ALARMS DATA --------------------
-const ALARMS_KEY = "wuwl_alarms";
-let alarms = store.get(ALARMS_KEY, []);
-let editingId = null;
-let lastFiredMinute = null;
-
-function saveAlarms(){ store.set(ALARMS_KEY, alarms); renderAlarms(); }
-
-function renderAlarms(){
-  const list = document.getElementById("alarmList");
-  list.innerHTML = "";
-  if(alarms.length === 0){
-    list.innerHTML = `<div class="empty-state">No alarms yet. Add one and let someone's love wake you up tomorrow.</div>`;
-    return;
-  }
-  alarms.sort((a,b) => a.time.localeCompare(b.time));
-  alarms.forEach(a => {
-    const dayNames = ["S","M","T","W","T","F","S"];
-    const daysStr = a.days.length === 7 ? "Every day"
-      : a.days.length === 0 ? "Once"
-      : a.days.map(d=>dayNames[d]).join(" ");
-    const card = document.createElement("div");
-    card.className = "alarm-card" + (a.enabled ? "" : " off");
-    card.innerHTML = `
-      <div class="alarm-left">
-        <div class="alarm-time">${to12h(a.time)}</div>
-        <div class="alarm-meta">
-          <span>${a.label || daysStr}</span>
-          <span class="voice-tag">${VOICE_LABELS[a.voice]}</span>
-        </div>
+  <div class="content" id="alarms-list">
+    <!-- Next banner injected here -->
+    <div class="next-banner" id="next-banner">
+      <div class="next-banner-icon">🔔</div>
+      <div class="next-banner-info">
+        <div class="next-banner-time" id="next-time">—</div>
+        <div class="next-banner-label" id="next-label">Next Alarm</div>
       </div>
-      <div class="alarm-actions">
-        <button class="icon-btn" data-edit="${a.id}">✎</button>
-        <button class="icon-btn" data-del="${a.id}">🗑</button>
-        <label class="switch">
-          <input type="checkbox" data-toggle="${a.id}" ${a.enabled ? "checked": ""}>
-          <span class="slider"></span>
-        </label>
+    </div>
+    <!-- Alarms rendered here by JS -->
+    <div id="alarms-container"></div>
+  </div>
+
+  <button class="fab" onclick="openNewAlarm()">
+    <span>＋</span> New Alarm
+  </button>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN 2: SET ALARM
+══════════════════════════════════════════════════ -->
+<div class="screen" id="screen-set">
+  <div class="topbar">
+    <button class="back-btn" onclick="showScreen('screen-home')">←</button>
+    <div class="topbar-title" id="set-title">نیا الارم</div>
+    <button class="save-btn" onclick="saveAlarm()">محفوظ</button>
+  </div>
+
+  <div class="content">
+    <!-- Time Picker -->
+    <div class="time-picker-wrap">
+      <div class="time-selection-line"></div>
+      <div class="time-col" id="hour-col"></div>
+      <div class="time-sep">:</div>
+      <div class="time-col" id="minute-col"></div>
+    </div>
+
+    <!-- Voice -->
+    <div class="card-section" onclick="showScreen('screen-voice')">
+      <div class="card-label">آواز</div>
+      <div class="voice-row">
+        <div class="voice-emoji-box" id="sel-voice-emoji">🤱</div>
+        <div>
+          <div class="voice-name" id="sel-voice-name">Mother</div>
+          <div class="voice-lang" id="sel-voice-lang">اردو</div>
+        </div>
+        <div class="chevron">›</div>
+      </div>
+    </div>
+
+    <!-- Days -->
+    <div class="card-section">
+      <div class="card-label">دہرانا</div>
+      <div class="days-row" id="days-row">
+        <button class="day-btn" data-day="0">پ</button>
+        <button class="day-btn" data-day="1">م</button>
+        <button class="day-btn" data-day="2">ب</button>
+        <button class="day-btn" data-day="3">ج</button>
+        <button class="day-btn" data-day="4">ج</button>
+        <button class="day-btn" data-day="5">ہ</button>
+        <button class="day-btn" data-day="6">ا</button>
+      </div>
+    </div>
+
+    <!-- Label -->
+    <div class="card-section">
+      <div class="card-label">نام (اختیاری)</div>
+      <input class="label-input" type="text" id="alarm-label" placeholder="مثال: صبح کا الارم">
+    </div>
+  </div>
+
+  <button class="save-big-btn" onclick="saveAlarm()">الارم لگائیں ⏰</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN 3: VOICE SELECT
+══════════════════════════════════════════════════ -->
+<div class="screen" id="screen-voice">
+  <div class="topbar">
+    <button class="back-btn" onclick="showScreen('screen-set')">←</button>
+    <div class="topbar-title">آواز چنیں</div>
+    <div style="width:40px"></div>
+  </div>
+
+  <div class="content" id="voice-list">
+    <!-- Rendered by JS -->
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN 4: RINGING
+══════════════════════════════════════════════════ -->
+<div class="screen" id="screen-ring">
+  <div class="ring-time">
+    <div class="ring-clock" id="ring-clock">6:00</div>
+    <div class="ring-ampm" id="ring-ampm">AM</div>
+    <div class="ring-voice-name" id="ring-voice">Mother</div>
+  </div>
+
+  <div class="ring-anim">
+    <div class="ring-wave"></div>
+    <div class="ring-wave"></div>
+    <div class="ring-wave"></div>
+    <div class="ring-circle" id="ring-emoji">🤱</div>
+  </div>
+
+  <div class="ring-buttons">
+    <button class="stop-btn" onclick="stopAlarm()">بند کریں ⏹</button>
+    <button class="snooze-btn" onclick="snoozeAlarm()">5 منٹ بعد 💤</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN 5: PAYWALL
+══════════════════════════════════════════════════ -->
+<div class="screen" id="screen-paywall">
+  <div class="topbar">
+    <button class="back-btn" onclick="showScreen('screen-home')">←</button>
+    <div class="topbar-title">Pro بنیں</div>
+    <div style="width:40px"></div>
+  </div>
+
+  <div class="content">
+    <div class="paywall-hero">
+      <div class="paywall-star">⭐</div>
+      <div class="paywall-title">ساری آوازیں کھلیں</div>
+      <div class="paywall-sub">6 نئی محبت بھری آوازیں، مستقبل کی تمام آوازیں بھی شامل</div>
+    </div>
+
+    <div class="card-section">
+      <div class="feature-list">
+        <div class="feature-item"><div class="feature-icon">🤱</div><div class="feature-text">Mother + Father (پہلے سے مفت)</div><div class="feature-check">✓</div></div>
+        <div class="feature-item"><div class="feature-icon">💝</div><div class="feature-text">Mom - English</div><div class="feature-check">🔒</div></div>
+        <div class="feature-item"><div class="feature-icon">💪</div><div class="feature-text">Coach - English</div><div class="feature-check">🔒</div></div>
+        <div class="feature-item"><div class="feature-icon">📚</div><div class="feature-text">Teacher - English</div><div class="feature-check">🔒</div></div>
+        <div class="feature-item"><div class="feature-icon">🔥</div><div class="feature-text">Motivatinal Coach</div><div class="feature-check">🔒</div></div>
+        <div class="feature-item"><div class="feature-icon">🌸</div><div class="feature-text">Friend</div><div class="feature-check">🔒</div></div>
+        <div class="feature-item"><div class="feature-icon">🤝</div><div class="feature-text">دSon/div><div class="feature-check">🔒</div></div>
+        <div class="feature-item"><div class="feature-icon">🤝</div><div class="feature-text">Daughter</div><div class="feature-check">🔒</div></div>
+        <div class="feature-item"><div class="feature-icon">🆕</div><div class="feature-text">مستقبل کی تمام نئی آوازیں</div><div class="feature-check">🔒</div></div>
+      </div>
+    </div>
+
+    <div class="price-card">
+      <div class="price-amount">$4.99</div>
+      <div class="price-label">ایک بار — ہمیشہ کے لیے</div>
+      <div class="price-note">کوئی ماہانہ فیس نہیں</div>
+    </div>
+  </div>
+
+  <button class="buy-btn" id="buy-btn" onclick="handlePurchase()">ابھی خریدیں — $4.99 ⭐</button>
+  <span class="restore-link" onclick="restorePurchase()">خریداری واپس لیں</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN 6: AUTH
+══════════════════════════════════════════════════ -->
+<div class="screen" id="screen-auth">
+  <div class="topbar">
+    <button class="back-btn" onclick="showScreen('screen-home')">←</button>
+    <div class="topbar-title" id="auth-title">لاگ ان</div>
+    <div style="width:40px"></div>
+  </div>
+
+  <div class="content" id="auth-content">
+    <!-- Rendered by JS based on state -->
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     INSTALL BANNER
+══════════════════════════════════════════════════ -->
+<div class="install-banner" id="install-banner">
+  <div>
+    <div style="font-size:14px;font-weight:700;color:var(--text)">ایپ انسٹال کریں 📲</div>
+    <div style="font-size:12px;color:var(--text2);margin-top:3px">آف لائن + اسکرین بند الارم</div>
+  </div>
+  <button class="install-btn" onclick="installApp()">انسٹال</button>
+  <button class="install-dismiss" onclick="dismissInstall()">✕</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT - Full App Logic
+══════════════════════════════════════════════════ -->
+<script>
+
+// ============================================================
+// DATA - Voices config
+// ============================================================
+const VOICES = [
+  { id:'ami',     name:'Mother',             lang:'اردو',    emoji:'🤱', desc:'پیاری Mother کی آواز سے اٹھیں',    free:true,  file:'ami_urdu.mp3' },
+  { id:'abu',     name:'Father',             lang:'اردو',    emoji:'👨‍👦', desc:'Father کی شفقت بھری آواز',         free:true,  file:'abu_urdu.mp3' },
+  { id:'mom',     name:'Mom',            lang:'English', emoji:'💝', desc:"Wake up with Mom's love",       free:false, file:'mom_english.mp3' },
+  { id:'coach',   name:'Coach',          lang:'English', emoji:'💪', desc:'Your personal motivator',       free:false, file:'coach_english.mp3' },
+  { id:'teacher', name:'Teacher',        lang:'English', emoji:'📚', desc:"Gentle teacher's voice",        free:false, file:'teacher_english.mp3' },
+  { id:'coachur', name:'موٹیویشنل کوچ', lang:'اردو',    emoji:'🔥', desc:'جوش بھری تقریر سے جاگیں',       free:false, file:'motivational_urdu.mp3' },
+  { id:'mummy',   name:'ممی',            lang:'हिंदी',   emoji:'🌸', desc:'माँ की प्यारी आवाज़',           free:false, file:'mummy_hindi.mp3' },
+  { id:'dost',    name:'دوست',           lang:'हिंदी',   emoji:'🤝', desc:'दोस्त की यारी से जागो',         free:false, file:'dost_hindi.mp3' },
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  alarms: [],
+  selectedVoiceId: 'ami',
+  isPro: false,
+  user: null,
+  editingAlarmId: null,
+  editHour: 6,
+  editMinute: 0,
+  editDays: [false,false,false,false,false,false,false],
+  editLabel: '',
+  ringingAlarmId: null,
+  previewAudio: null,
+  previewVoiceId: null,
+  deferredInstall: null,
+  ringTimeout: null,
+  snoozeTimeout: null,
+};
+
+// ============================================================
+// PERSISTENCE
+// ============================================================
+function saveState() {
+  try {
+    localStorage.setItem('maa_alarms', JSON.stringify(state.alarms));
+    localStorage.setItem('maa_voice', state.selectedVoiceId);
+    localStorage.setItem('maa_pro', String(state.isPro));
+    if (state.user) localStorage.setItem('maa_user', JSON.stringify(state.user));
+  } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const a = localStorage.getItem('maa_alarms');
+    if (a) state.alarms = JSON.parse(a);
+    const v = localStorage.getItem('maa_voice');
+    if (v) state.selectedVoiceId = v;
+    state.isPro = localStorage.getItem('maa_pro') === 'true';
+    const u = localStorage.getItem('maa_user');
+    if (u) state.user = JSON.parse(u);
+  } catch(e) {}
+}
+
+// ============================================================
+// SCREEN NAVIGATION
+// ============================================================
+let currentScreen = 'screen-home';
+
+function showScreen(id) {
+  const curr = document.getElementById(currentScreen);
+  const next = document.getElementById(id);
+  if (!next || id === currentScreen) return;
+
+  curr.classList.add('exit');
+  setTimeout(() => {
+    curr.classList.remove('active', 'exit');
+  }, 300);
+
+  next.classList.add('active');
+  currentScreen = id;
+
+  // Screen-specific init
+  if (id === 'screen-voice') renderVoiceList();
+  if (id === 'screen-auth') renderAuth();
+  if (id === 'screen-home') renderHome();
+}
+
+// ============================================================
+// HOME SCREEN
+// ============================================================
+function renderHome() {
+  renderAlarms();
+  updateNextBanner();
+  updateProBtn();
+}
+
+function renderAlarms() {
+  const container = document.getElementById('alarms-container');
+  if (state.alarms.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⏰</div>
+        <div class="empty-title">No Alarm</div>
+        <div class="empty-sub">نیچے + بٹن دبا کر<br>Set First Alarm</div>
       </div>`;
-    list.appendChild(card);
-  });
-
-  list.querySelectorAll("[data-toggle]").forEach(el => {
-    el.addEventListener("change", e => {
-      const id = e.target.dataset.toggle;
-      alarms = alarms.map(a => a.id === id ? {...a, enabled: e.target.checked} : a);
-      saveAlarms();
-    });
-  });
-  list.querySelectorAll("[data-del]").forEach(el => {
-    el.addEventListener("click", e => {
-      const id = e.target.dataset.del;
-      alarms = alarms.filter(a => a.id !== id);
-      saveAlarms();
-    });
-  });
-  list.querySelectorAll("[data-edit]").forEach(el => {
-    el.addEventListener("click", e => {
-      openModal(e.target.dataset.edit);
-    });
-  });
-}
-
-function to12h(t){
-  const [h,m] = t.split(":").map(Number);
-  const period = h >= 12 ? "PM" : "AM";
-  const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12}:${String(m).padStart(2,"0")} ${period}`;
-}
-
-// -------------------- MODAL --------------------
-const overlay = document.getElementById("modalOverlay");
-document.getElementById("addAlarmBtn").addEventListener("click", () => openModal(null));
-document.getElementById("cancelBtn").addEventListener("click", closeModal);
-
-function openModal(id){
-  editingId = id;
-  document.querySelectorAll(".day-chip").forEach(c => c.classList.remove("active"));
-  if(id){
-    const a = alarms.find(x => x.id === id);
-    document.getElementById("modalTitle").textContent = "Edit Alarm";
-    document.getElementById("inputTime").value = a.time;
-    document.getElementById("inputLabel").value = a.label;
-    document.getElementById("inputVoice").value = a.voice;
-    document.getElementById("inputMessage").value = a.message;
-    a.days.forEach(d => document.querySelector(`.day-chip[data-day="${d}"]`).classList.add("active"));
-  } else {
-    document.getElementById("modalTitle").textContent = "New Alarm";
-    document.getElementById("inputTime").value = "07:00";
-    document.getElementById("inputLabel").value = "";
-    document.getElementById("inputVoice").value = "mother";
-    document.getElementById("inputMessage").value = "";
+    return;
   }
-  overlay.classList.add("show");
-}
-function closeModal(){ overlay.classList.remove("show"); editingId = null; }
 
-document.querySelectorAll(".day-chip").forEach(chip => {
-  chip.addEventListener("click", () => chip.classList.toggle("active"));
+  container.innerHTML = state.alarms.map(alarm => {
+    const voice = VOICES.find(v => v.id === alarm.voiceId) || VOICES[0];
+    const h = alarm.hour % 12 === 0 ? 12 : alarm.hour % 12;
+    const m = String(alarm.minute).padStart(2,'0');
+    const ampm = alarm.hour < 12 ? 'AM' : 'PM';
+    const daysStr = getDaysStr(alarm.days);
+
+    return `
+    <div class="alarm-card ${alarm.active ? 'active-alarm' : ''}"
+         onclick="editAlarm('${alarm.id}')">
+      <div>
+        <div class="alarm-time-big">${h}:${m}</div>
+        <div class="alarm-ampm">${ampm}</div>
+      </div>
+      <div class="alarm-meta">
+        <div class="alarm-voice">${voice.emoji} ${voice.name}</div>
+        <div class="alarm-days">${daysStr}</div>
+        ${alarm.label ? `<div style="font-size:12px;color:var(--text3);margin-top:2px">${alarm.label}</div>` : ''}
+      </div>
+      <button class="toggle ${alarm.active ? 'on' : ''}"
+              onclick="event.stopPropagation(); toggleAlarm('${alarm.id}')"></button>
+    </div>`;
+  }).join('');
+}
+
+function getDaysStr(days) {
+  if (!days || !days.some(Boolean)) return 'Once';
+  if (days.every(Boolean)) return 'ہر روز';
+  const names = ['Monday,Tuesday,Wensday,Thursday,Friday,Saturday,'Sunday'];
+0  return days.map((d,i) => d ? names[i] : null).filter(Boolean).join('، ');
+}
+
+function updateNextBanner() {
+  const banner = document.getElementById('next-banner');
+  const active = state.alarms.filter(a => a.active);
+  if (active.length === 0) { banner.classList.remove('show'); return; }
+
+  const next = active.map(a => ({ alarm: a, time: getNextAlarmTime(a) }))
+    .sort((a,b) => a.time - b.time)[0];
+
+  const h = next.alarm.hour % 12 === 0 ? 12 : next.alarm.hour % 12;
+  const m = String(next.alarm.minute).padStart(2,'0');
+  const ampm = next.alarm.hour < 12 ? 'AM' : 'PM';
+  const diff = next.time - Date.now();
+  const hrs = Math.floor(diff / 3600000);
+  const mins = Math.floor((diff % 3600000) / 60000);
+
+  document.getElementById('next-time').textContent = `${h}:${m} ${ampm}`;
+  document.getElementById('next-label').textContent =
+    hrs > 0 ? `${hrs} Hours ${mins} Minute` : `${mins} Minute`;
+  banner.classList.add('show');
+}
+
+function updateProBtn() {
+  const btn = document.getElementById('pro-btn');
+  if (state.isPro) {
+    btn.textContent = '⭐ PRO';
+    btn.className = 'pro-badge pro';
+  } else if (state.user) {
+    btn.textContent = `👤 ${state.user.email.split('@')[0]}`;
+    btn.className = 'pro-badge free';
+  } else {
+    btn.textContent ='� Login';
+    btn.className = 'pro-badge free';
+  }
+}
+
+function getNextAlarmTime(alarm) {
+  const now = new Date();
+  let next = new Date(now.getFullYear(), now.getMonth(), now.getDate(),
+                      alarm.hour, alarm.minute, 0);
+  if (next <= now) next = new Date(next.getTime() + 86400000);
+
+  if (alarm.days && alarm.days.some(Boolean)) {
+    for (let i = 0; i < 7; i++) {
+      const candidate = new Date(next.getTime() + i * 86400000);
+      const dayIdx = (candidate.getDay() + 6) % 7; // Mon=0
+      if (alarm.days[dayIdx]) return candidate.getTime();
+    }
+  }
+  return next.getTime();
+}
+
+// ============================================================
+// ALARM CRUD
+// ============================================================
+function openNewAlarm() {
+  const now = new Date();
+  state.editingAlarmId = null;
+  state.editHour = now.getHours();
+  state.editMinute = (now.getMinutes() + 5) % 60;
+  state.editDays = [false,false,false,false,false,false,false];
+  state.editLabel = '';
+
+  document.getElementById('set-title').textContent = 'New Alarm';
+  document.getElementById('alarm-label').value = '';
+  document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('sel'));
+  updateVoiceDisplay();
+  buildTimePicker();
+  showScreen('screen-set');
+}
+
+function editAlarm(id) {
+  const alarm = state.alarms.find(a => a.id === id);
+  if (!alarm) return;
+
+  state.editingAlarmId = id;
+  state.editHour = alarm.hour;
+  state.editMinute = alarm.minute;
+  state.editDays = [...(alarm.days || [false,false,false,false,false,false,false])];
+  state.editLabel = alarm.label || '';
+  state.selectedVoiceId = alarm.voiceId;
+
+  document.getElementById('set-title').textContent = 'Change Alarm';
+  document.getElementById('alarm-label').value = state.editLabel;
+
+  document.querySelectorAll('.day-btn').forEach(b => {
+    const d = parseInt(b.dataset.day);
+    b.classList.toggle('sel', state.editDays[d]);
+  });
+
+  updateVoiceDisplay();
+  buildTimePicker();
+  showScreen('screen-set');
+}
+
+function toggleAlarm(id) {
+  const alarm = state.alarms.find(a => a.id === id);
+  if (!alarm) return;
+  alarm.active = !alarm.active;
+  saveState();
+  renderHome();
+  scheduleNotifications();
+  showToast(alarm.active ? 'الارم آن ✅' : 'الارم آف');
+}
+
+function saveAlarm() {
+  const voice = VOICES.find(v => v.id === state.selectedVoiceId) || VOICES[0];
+  const label = document.getElementById('alarm-label').value.trim();
+
+  if (state.editingAlarmId) {
+    const alarm = state.alarms.find(a => a.id === state.editingAlarmId);
+    if (alarm) {
+      alarm.hour = state.editHour;
+      alarm.minute = state.editMinute;
+      alarm.voiceId = state.selectedVoiceId;
+      alarm.days = [...state.editDays];
+      alarm.label = label;
+    }
+  } else {
+    state.alarms.push({
+      id: Date.now().toString(),
+      hour: state.editHour,
+      minute: state.editMinute,
+      voiceId: state.selectedVoiceId,
+      days: [...state.editDays],
+      label: label,
+      active: true,
+    });
+  }
+
+  saveState();
+  scheduleNotifications();
+  showToast('الارم محفوظ ✅');
+  showScreen('screen-home');
+}
+
+// Days toggle
+document.getElementById('days-row').addEventListener('click', e => {
+  const btn = e.target.closest('.day-btn');
+  if (!btn) return;
+  const d = parseInt(btn.dataset.day);
+  state.editDays[d] = !state.editDays[d];
+  btn.classList.toggle('sel', state.editDays[d]);
 });
 
-document.getElementById("saveBtn").addEventListener("click", () => {
-  const time = document.getElementById("inputTime").value;
-  const label = document.getElementById("inputLabel").value.trim();
-  const voice = document.getElementById("inputVoice").value;
-  const message = document.getElementById("inputMessage").value.trim() ||
-    "Good morning, sunshine! Time to rise and shine.";
-  const days = Array.from(document.querySelectorAll(".day-chip.active")).map(c => Number(c.dataset.day));
+// ============================================================
+// TIME PICKER
+// ============================================================
+function buildTimePicker() {
+  const hourCol = document.getElementById('hour-col');
+  const minCol = document.getElementById('minute-col');
 
-  if(editingId){
-    alarms = alarms.map(a => a.id === editingId ? {...a, time, label, voice, message, days} : a);
+  // Padding items for scroll snap centering
+  const pad = '<div class="time-item" style="height:72px"></div>';
+
+  hourCol.innerHTML = pad + Array.from({length:24}, (_,i) =>
+    `<div class="time-item" data-val="${i}">${String(i).padStart(2,'0')}</div>`
+  ).join('') + pad;
+
+  minCol.innerHTML = pad + Array.from({length:60}, (_,i) =>
+    `<div class="time-item" data-val="${i}">${String(i).padStart(2,'0')}</div>`
+  ).join('') + pad;
+
+  // Scroll to current values
+  setTimeout(() => {
+    scrollPickerTo(hourCol, state.editHour);
+    scrollPickerTo(minCol, state.editMinute);
+  }, 50);
+
+  hourCol.addEventListener('scroll', () => onPickerScroll(hourCol, 'hour'), {passive:true});
+  minCol.addEventListener('scroll', () => onPickerScroll(minCol, 'minute'), {passive:true});
+}
+
+function scrollPickerTo(col, val) {
+  const item = col.querySelector(`[data-val="${val}"]`);
+  if (!item) return;
+  const itemH = 56;
+  col.scrollTop = val * itemH;
+}
+
+let scrollTimer = null;
+function onPickerScroll(col, type) {
+  clearTimeout(scrollTimer);
+  scrollTimer = setTimeout(() => {
+    const itemH = 56;
+    const idx = Math.round(col.scrollTop / itemH);
+    const val = Math.max(0, Math.min(idx, type === 'hour' ? 23 : 59));
+
+    // Snap
+    col.scrollTo({ top: val * itemH, behavior: 'smooth' });
+
+    if (type === 'hour') state.editHour = val;
+    else state.editMinute = val;
+
+    // Highlight selected
+    col.querySelectorAll('.time-item').forEach(el => {
+      el.classList.toggle('selected', parseInt(el.dataset.val) === val);
+    });
+  }, 80);
+}
+
+// ============================================================
+// VOICE SELECT
+// ============================================================
+function renderVoiceList() {
+  const list = document.getElementById('voice-list');
+  const freeVoices = VOICES.filter(v => v.free);
+  const proVoices = VOICES.filter(v => !v.free);
+
+  list.innerHTML = `
+    <div class="section-header">
+      <div class="section-bar" style="background:var(--green)"></div>
+      <div><div class="section-title">مفت آوازیں</div>
+      <div class="section-sub" style="color:var(--green)">✅ بغیر خریداری</div></div>
+    </div>
+    ${freeVoices.map(v => voiceCardHTML(v)).join('')}
+
+    <div class="section-header">
+      <div class="section-bar" style="background:${state.isPro ? 'var(--pro)' : 'var(--text3)'}"></div>
+      <div><div class="section-title">پرو آوازیں</div>
+      <div class="section-sub" style="color:${state.isPro ? 'var(--pro)' : 'var(--text3)'}">
+        ${state.isPro ? '⭐ آپ کے پاس Pro ہے' : '🔒 صرف Pro'}</div></div>
+    </div>
+    ${proVoices.map(v => voiceCardHTML(v)).join('')}
+
+    ${!state.isPro ? `
+    <div class="upgrade-banner" onclick="showScreen('screen-paywall')">
+      <span style="font-size:36px">⭐</span>
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:700;color:var(--pro)">Pro کریں - ساری آوازیں کھلیں</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:3px">6 نئی آوازیں + مستقبل کی آوازیں</div>
+      </div>
+      <span style="color:var(--pro)">›</span>
+    </div>` : ''}
+    <div style="height:40px"></div>
+  `;
+}
+
+function voiceCardHTML(v) {
+  const isLocked = !v.free && !state.isPro;
+  const isSelected = state.selectedVoiceId === v.id;
+  return `
+  <div class="voice-card ${isSelected ? 'selected' : ''} ${isLocked ? 'locked' : ''}"
+       onclick="${isLocked ? "showScreen('screen-paywall')" : `selectVoice('${v.id}')`}">
+    <div class="vc-emoji">${isLocked ? '🔒' : v.emoji}</div>
+    <div class="vc-info">
+      <div class="vc-name">${v.name}</div>
+      <span class="vc-lang">${v.lang}</span>
+      <div class="vc-desc">${v.desc}</div>
+    </div>
+    ${!isLocked ? `
+    <button class="play-btn ${state.previewVoiceId === v.id ? 'playing' : ''}"
+            onclick="event.stopPropagation(); togglePreview('${v.id}')">
+      ${state.previewVoiceId === v.id ? '⏹' : '▶'}
+    </button>` : ''}
+    ${isSelected ? '<div class="check-icon">✓</div>' : ''}
+  </div>`;
+}
+
+function selectVoice(id) {
+  state.selectedVoiceId = id;
+  saveState();
+  updateVoiceDisplay();
+  renderVoiceList();
+  stopPreview();
+}
+
+function updateVoiceDisplay() {
+  const v = VOICES.find(x => x.id === state.selectedVoiceId) || VOICES[0];
+  document.getElementById('sel-voice-emoji').textContent = v.emoji;
+  document.getElementById('sel-voice-name').textContent = v.name;
+  document.getElementById('sel-voice-lang').textContent = v.lang;
+}
+
+// ── Audio Preview ──────────────────────────────────────────
+function togglePreview(voiceId) {
+  if (state.previewVoiceId === voiceId) {
+    stopPreview();
   } else {
-    alarms.push({ id: "a"+Date.now(), time, label, voice, message, days, enabled: true });
-  }
-  saveAlarms();
-  closeModal();
-});
-
-// -------------------- ALARM FIRING --------------------
-function checkAlarms(now){
-  if(isLocked()) return;
-  const hh = String(now.getHours()).padStart(2,"0");
-  const mm = String(now.getMinutes()).padStart(2,"0");
-  const nowStr = `${hh}:${mm}`;
-  const minuteKey = now.toDateString()+nowStr;
-  if(minuteKey === lastFiredMinute) return;
-
-  const today = now.getDay();
-  const due = alarms.find(a => a.enabled && a.time === nowStr && (a.days.length === 0 || a.days.includes(today)));
-  if(due){
-    lastFiredMinute = minuteKey;
-    fireAlarm(due);
+    stopPreview();
+    state.previewVoiceId = voiceId;
+    const v = VOICES.find(x => x.id === voiceId);
+    if (v) {
+      // Try to play - will work if audio file exists at assets/audio/
+      try {
+        state.previewAudio = new Audio(`assets/audio/${v.file}`);
+        state.previewAudio.volume = 1;
+        state.previewAudio.play().catch(() => {
+          showToast('MP3 فائل ابھی نہیں ہے');
+        });
+        setTimeout(stopPreview, 15000);
+      } catch(e) {}
+    }
+    renderVoiceList();
   }
 }
 
-function isLocked(){
-  return !isPurchased() && daysLeft() <= 0;
-}
-
-let activeAlarm = null;
-function fireAlarm(a){
-  activeAlarm = a;
-  document.getElementById("ringTime").textContent = to12h(a.time);
-  document.getElementById("ringLabel").textContent = a.label || VOICE_LABELS[a.voice];
-  document.getElementById("ringMsg").textContent = a.message;
-  document.getElementById("ringScreen").classList.add("show");
-  playVoice(a);
-}
-
-function playVoice(a){
-  // [DEV:AUDIO] If a real recorded file exists for this persona, play it.
-  const src = AUDIO_SOURCES[a.voice];
-  if(src){
-    const audio = new Audio(src);
-    audio.loop = true;
-    audio.play().catch(()=>{ speakFallback(a); });
-    window.__wuwl_audio = audio;
-  } else {
-    speakFallback(a);
+function stopPreview() {
+  if (state.previewAudio) {
+    state.previewAudio.pause();
+    state.previewAudio = null;
   }
+  state.previewVoiceId = null;
+  const list = document.getElementById('voice-list');
+  if (list && list.offsetParent !== null) renderVoiceList();
 }
 
-function speakFallback(a){
-  if(!("speechSynthesis" in window)) return;
-  const profile = TTS_PROFILE[a.voice];
-  const utter = new SpeechSynthesisUtterance(a.message);
-  utter.pitch = profile.pitch;
-  utter.rate = profile.rate;
-  const voices = speechSynthesis.getVoices();
-  const preferred = voices.find(v => profile.genderHint !== "any" &&
-    v.name.toLowerCase().includes(profile.genderHint));
-  if(preferred) utter.voice = preferred;
-  utter.onend = () => {
-    if(document.getElementById("ringScreen").classList.contains("show")){
-      speechSynthesis.speak(utter); // loop until dismissed
+// ============================================================
+// RINGING SCREEN
+// ============================================================
+function triggerRinging(alarm) {
+  state.ringingAlarmId = alarm.id;
+  const voice = VOICES.find(v => v.id === alarm.voiceId) || VOICES[0];
+
+  // Update UI
+  const h = alarm.hour % 12 === 0 ? 12 : alarm.hour % 12;
+  const m = String(alarm.minute).padStart(2,'0');
+  document.getElementById('ring-clock').textContent = `${h}:${m}`;
+  document.getElementById('ring-ampm').textContent = alarm.hour < 12 ? 'AM' : 'PM';
+  document.getElementById('ring-voice').textContent = `${voice.emoji} ${voice.name}`;
+  document.getElementById('ring-emoji').textContent = voice.emoji;
+
+  // Play audio (loop)
+  playAlarmAudio(voice.file);
+
+  // Vibrate
+  if ('vibrate' in navigator) navigator.vibrate([500,200,500,200,500]);
+
+  showScreen('screen-ring');
+
+  // Auto stop after 1 minute
+  clearTimeout(state.ringTimeout);
+  state.ringTimeout = setTimeout(() => snoozeAlarm(), 60000);
+}
+
+let alarmAudio = null;
+let alarmLoopCount = 0;
+
+function playAlarmAudio(file) {
+  stopAlarmAudio();
+  alarmLoopCount = 0;
+
+  alarmAudio = new Audio(`assets/audio/${file}`);
+  alarmAudio.volume = 1;
+  alarmAudio.loop = false;
+
+  alarmAudio.onended = () => {
+    alarmLoopCount++;
+    if (alarmLoopCount < 4) { // 4 loops = ~1 min
+      alarmAudio.currentTime = 0;
+      alarmAudio.play().catch(() => {});
     }
   };
-  speechSynthesis.speak(utter);
+
+  alarmAudio.play().catch(() => {
+    // Audio blocked - show UI indicator
+    showToast('🔔 الارم! اسکرین کھولیں');
+  });
 }
 
-function stopVoice(){
-  speechSynthesis.cancel();
-  if(window.__wuwl_audio){ window.__wuwl_audio.pause(); window.__wuwl_audio = null; }
-}
-
-document.getElementById("dismissBtn").addEventListener("click", () => {
-  stopVoice();
-  document.getElementById("ringScreen").classList.remove("show");
-  activeAlarm = null;
-});
-
-document.getElementById("snoozeBtn").addEventListener("click", () => {
-  stopVoice();
-  document.getElementById("ringScreen").classList.remove("show");
-  if(activeAlarm){
-    const snoozeTime = new Date(Date.now() + 5*60*1000);
-    const hh = String(snoozeTime.getHours()).padStart(2,"0");
-    const mm = String(snoozeTime.getMinutes()).padStart(2,"0");
-    const snoozed = {...activeAlarm, id: "snz"+Date.now(), time: `${hh}:${mm}`, days: [], label: (activeAlarm.label||"Alarm")+" (snoozed)"};
-    alarms.push(snoozed);
-    saveAlarms();
+function stopAlarmAudio() {
+  if (alarmAudio) {
+    alarmAudio.pause();
+    alarmAudio.onended = null;
+    alarmAudio = null;
   }
-  activeAlarm = null;
+  alarmLoopCount = 0;
+  if ('vibrate' in navigator) navigator.vibrate(0);
+}
+
+function stopAlarm() {
+  stopAlarmAudio();
+  clearTimeout(state.ringTimeout);
+
+  // If one-time alarm, deactivate it
+  const alarm = state.alarms.find(a => a.id === state.ringingAlarmId);
+  if (alarm && (!alarm.days || !alarm.days.some(Boolean))) {
+    alarm.active = false;
+    saveState();
+  }
+
+  state.ringingAlarmId = null;
+  showScreen('screen-home');
+  renderHome();
+}
+
+function snoozeAlarm() {
+  stopAlarmAudio();
+  clearTimeout(state.ringTimeout);
+
+  // Schedule snooze alarm in 5 minutes
+  const snoozeTime = Date.now() + 5 * 60 * 1000;
+  localStorage.setItem('maa_snooze', JSON.stringify({
+    alarmId: state.ringingAlarmId,
+    time: snoozeTime,
+  }));
+
+  showToast('5 منٹ بعد واپس آئیں گے 💤');
+  state.ringingAlarmId = null;
+  showScreen('screen-home');
+}
+
+// ============================================================
+// ALARM SCHEDULER (Web-based - visible tab or PWA)
+// Uses setInterval + Web Notifications
+// ============================================================
+function scheduleNotifications() {
+  // Request notification permission
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function checkAlarms() {
+  const now = new Date();
+  const nowH = now.getHours();
+  const nowM = now.getMinutes();
+  const nowS = now.getSeconds();
+
+  // Only trigger at second 0
+  if (nowS !== 0) return;
+
+  for (const alarm of state.alarms) {
+    if (!alarm.active) continue;
+    if (alarm.hour !== nowH || alarm.minute !== nowM) continue;
+
+    // Day check
+    if (alarm.days && alarm.days.some(Boolean)) {
+      const dayIdx = (now.getDay() + 6) % 7;
+      if (!alarm.days[dayIdx]) continue;
+    }
+
+    // Skip if already ringing
+    if (state.ringingAlarmId) continue;
+
+    triggerRinging(alarm);
+    break;
+  }
+
+  // Check snooze
+  checkSnooze();
+}
+
+function checkSnooze() {
+  const snoozeData = localStorage.getItem('maa_snooze');
+  if (!snoozeData) return;
+  const { alarmId, time } = JSON.parse(snoozeData);
+  if (Date.now() >= time) {
+    localStorage.removeItem('maa_snooze');
+    const alarm = state.alarms.find(a => a.id === alarmId);
+    if (alarm) triggerRinging(alarm);
+  }
+}
+
+// Check every second
+setInterval(checkAlarms, 1000);
+
+// ============================================================
+// SERVICE WORKER - Screen band hone par bhi kaam kare
+// (background sync + notification)
+// ============================================================
+const SW_CODE = `
+const CACHE = 'maa-v1';
+const ASSETS = ['./', './index.html'];
+
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  self.skipWaiting();
 });
 
-// -------------------- INIT --------------------
-getTrialStart();
-checkLock();
-renderAlarms();
-tickClock();
-setInterval(checkLock, 60000);
+self.addEventListener('activate', e => {
+  e.waitUntil(clients.claim());
+});
+
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match('./index.html')))
+  );
+});
+
+// Alarm check via notification
+self.addEventListener('message', e => {
+  if (e.data.type === 'SCHEDULE_ALARM') {
+    const { alarmTime, voiceName, voiceEmoji } = e.data;
+    const delay = alarmTime - Date.now();
+    if (delay > 0 && delay < 86400000) {
+      setTimeout(() => {
+        self.registration.showNotification(voiceEmoji + ' وقت اٹھنے کا!', {
+          body: voiceName + ' آپ کو جگا رہے ہیں',
+          icon: './icon-192.png',
+          badge: './icon-192.png',
+          tag: 'alarm',
+          requireInteraction: true,
+          vibrate: [500, 200, 500, 200, 500, 200, 500],
+          actions: [
+            { action: 'stop', title: 'بند کریں ⏹' },
+            { action: 'snooze', title: '5 منٹ 💤' },
+          ],
+        });
+      }, delay);
+    }
+  }
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({type:'window'}).then(list => {
+      if (list.length > 0) {
+        list[0].focus();
+        list[0].postMessage({ type: e.action === 'snooze' ? 'SNOOZE' : 'STOP' });
+      } else {
+        clients.openWindow('./');
+      }
+    })
+  );
+});
+`;
+
+// Register Service Worker
+async function registerSW() {
+  if (!('serviceWorker' in navigator)) return;
+
+  try {
+    // Write SW as blob
+    const blob = new Blob([SW_CODE], { type: 'application/javascript' });
+    const swUrl = URL.createObjectURL(blob);
+
+    // Note: Blob SW has scope limitations - for production host sw.js as a file
+    // For demo, we use a registered SW file approach
+    // If sw.js exists on server, register it:
+    const reg = await navigator.serviceWorker.register('./sw.js').catch(() => null);
+    if (reg) {
+      console.log('SW registered');
+      scheduleSWAlarms(reg);
+    }
+  } catch(e) {}
+
+  // Listen for SW messages
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data.type === 'STOP') stopAlarm();
+    if (e.data.type === 'SNOOZE') snoozeAlarm();
+  });
+}
+
+function scheduleSWAlarms(reg) {
+  // Send next alarm to SW for background notification
+  const active = state.alarms.filter(a => a.active);
+  if (active.length === 0) return;
+
+  const next = active.map(a => ({ alarm:a, time: getNextAlarmTime(a) }))
+    .sort((a,b) => a.time - b.time)[0];
+
+  if (!next) return;
+
+  const voice = VOICES.find(v => v.id === next.alarm.voiceId) || VOICES[0];
+
+  if (reg.active) {
+    reg.active.postMessage({
+      type: 'SCHEDULE_ALARM',
+      alarmTime: next.time,
+      voiceName: voice.name,
+      voiceEmoji: voice.emoji,
+    });
+  }
+}
+
+// ============================================================
+// PAYWALL / PURCHASE
+// (Online call - only for Get Pro button)
+// ============================================================
+function handlePurchase() {
+  const btn = document.getElementById('buy-btn');
+  btn.textContent = 'پراسیس ہو رہا ہے...';
+  btn.disabled = true;
+
+  // Check internet
+  if (!navigator.onLine) {
+    showToast('خریداری کے لیے انٹرنیٹ چاہیے');
+    btn.textContent = 'ابھی خریدیں — $4.99 ⭐';
+    btn.disabled = false;
+    return;
+  }
+
+  // === PRODUCTION: Replace with your payment gateway ===
+  // Stripe, Paddle, or any payment processor
+  // This opens payment page online
+  // After successful payment, call unlockPro()
+
+  // Demo simulation:
+  setTimeout(() => {
+    // In production: verify payment on your server, then call unlockPro()
+    simulatePaymentFlow();
+    btn.textContent = 'ابھی خریدیں — $4.99 ⭐';
+    btn.disabled = false;
+  }, 2000);
+}
+
+function simulatePaymentFlow() {
+  // Show payment options (in production, redirect to payment gateway)
+  const proceed = confirm('ادائیگی کے صفحے پر جائیں؟\n(یہ ایک ڈیمو ہے)');
+  if (proceed) {
+    // Simulate successful payment
+    unlockPro();
+  }
+}
+
+function unlockPro() {
+  state.isPro = true;
+  saveState();
+  updateProBtn();
+  showToast('🎉 Pro unlock ہو گیا! ساری آوازیں کھل گئیں');
+  showScreen('screen-home');
+}
+
+function restorePurchase() {
+  if (!navigator.onLine) {
+    showToast('واپسی کے لیے انٹرنیٹ چاہیے');
+    return;
+  }
+  // In production: verify with your server
+  showToast('کوئی خریداری نہیں ملی');
+}
+
+// ============================================================
+// AUTH (Firebase - Online only)
+// ============================================================
+function renderAuth() {
+  const content = document.getElementById('auth-content');
+
+  if (state.user) {
+    content.innerHTML = `
+      <div class="signed-in-state">
+        <div class="user-avatar">👤</div>
+        <div style="font-size:18px;font-weight:700;color:var(--text)">${state.user.email}</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:6px">
+          ${state.isPro ? '⭐ Pro یوزر' : 'مفت یوزر'}
+        </div>
+        ${!state.isPro ? `<button onclick="showScreen('screen-paywall')" style="
+          background:linear-gradient(135deg,var(--gold),var(--gold2));
+          color:var(--bg);border:none;border-radius:12px;
+          padding:12px 28px;font-size:15px;font-weight:700;
+          cursor:pointer;margin-top:20px">Pro خریدیں ⭐</button>` : ''}
+        <button class="signout-btn" onclick="signOut()">سائن آؤٹ</button>
+      </div>`;
+    return;
+  }
+
+  let isRegister = false;
+
+  function renderForm() {
+    content.innerHTML = `
+      <div class="auth-hero">
+        <div class="auth-icon">🔐</div>
+        <div class="auth-title">${isRegister ? 'رجسٹر کریں' : 'لاگ ان کریں'}</div>
+        <div class="auth-sub">Pro سٹیٹس محفوظ کرنے کے لیے</div>
+      </div>
+      <div class="auth-form">
+        <div class="input-group">
+          <div class="input-label">ای میل</div>
+          <input class="text-input" type="email" id="auth-email" placeholder="aap@example.com" autocomplete="email">
+        </div>
+        <div class="input-group">
+          <div class="input-label">پاسورڈ</div>
+          <input class="text-input" type="password" id="auth-pass" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div class="auth-error" id="auth-err"></div>
+        <div class="auth-success" id="auth-ok"></div>
+        <button class="auth-btn" onclick="handleAuth(${isRegister})">
+          ${isRegister ? 'اکاؤنٹ بنائیں' : 'لاگ ان کریں'}
+        </button>
+        <div class="auth-toggle" onclick="isRegister=!isRegister;renderForm()">
+          ${isRegister ? 'پہلے سے اکاؤنٹ ہے؟ <span>لاگ ان کریں</span>' : 'نیا اکاؤنٹ؟ <span>رجسٹر کریں</span>'}
+        </div>
+      </div>`;
+  }
+
+  renderForm();
+}
+
+async function handleAuth(isRegister) {
+  const email = document.getElementById('auth-email')?.value?.trim();
+  const pass = document.getElementById('auth-pass')?.value;
+  const errEl = document.getElementById('auth-err');
+  const okEl = document.getElementById('auth-ok');
+
+  if (!email || !pass) { showAuthError('ای میل اور پاسورڈ درج کریں'); return; }
+  if (pass.length < 6) { showAuthError('پاسورڈ کم از کم 6 حروف کا ہو'); return; }
+
+  if (!navigator.onLine) {
+    showAuthError('لاگ ان کے لیے انٹرنیٹ چاہیے');
+    return;
+  }
+
+  // === PRODUCTION: Replace with Firebase Auth ===
+  // import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
+  // For demo, simulate:
+  showAuthError('');
+  if (okEl) { okEl.className = 'auth-success show'; okEl.textContent = 'لاگ ان ہو رہے ہیں...'; }
+
+  setTimeout(() => {
+    // Simulate successful login
+    state.user = { email, uid: 'demo-' + Date.now() };
+    saveState();
+    updateProBtn();
+    renderAuth();
+    showToast('لاگ ان کMotherاب ✅');
+  }, 1000);
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-err');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = msg ? 'auth-error show' : 'auth-error';
+}
+
+function signOut() {
+  state.user = null;
+  state.isPro = false;
+  localStorage.removeItem('maa_user');
+  saveState();
+  updateProBtn();
+  renderAuth();
+  showToast('سائن آؤٹ ہو گئے');
+}
+
+// ============================================================
+// PWA INSTALL
+// ============================================================
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  state.deferredInstall = e;
+  // Show install banner after 3 seconds
+  setTimeout(() => {
+    document.getElementById('install-banner').classList.add('show');
+  }, 3000);
+});
+
+function installApp() {
+  if (state.deferredInstall) {
+    state.deferredInstall.prompt();
+    state.deferredInstall.userChoice.then(() => {
+      state.deferredInstall = null;
+      dismissInstall();
+    });
+  }
+}
+
+function dismissInstall() {
+  document.getElementById('install-banner').classList.remove('show');
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  loadState();
+  renderHome();
+  updateVoiceDisplay();
+  registerSW();
+  scheduleNotifications();
+
+  // Wake lock - screen on rakhna alarm par (modern browsers)
+  if ('wakeLock' in navigator) {
+    document.addEventListener('visibilitychange', async () => {
+      if (state.ringingAlarmId && document.visibilityState === 'visible') {
+        try { await navigator.wakeLock.request('screen'); } catch(e) {}
+      }
+    });
+  }
+
+  // Network status
+  window.addEventListener('online', () => showToast('انٹرنیٹ آ گئا 🌐'));
+  window.addEventListener('offline', () => showToast('آف لائن موڈ 📵'));
+
+  // SW message handler
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', e => {
+      if (e.data.type === 'STOP') stopAlarm();
+      if (e.data.type === 'SNOOZE') snoozeAlarm();
+    });
+  }
+}
+
+init();
 </script>
+
 </body>
 </html>
