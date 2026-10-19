@@ -1,0 +1,21 @@
+apply plugin: 'com.android.application'
+android {
+    compileSdkVersion 33
+    defaultConfig {
+        applicationId "com.gle.softalarm"
+        minSdkVersion 21
+        targetSdkVersion 33
+        versionCode 3
+        versionName "3.0.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    namespace 'com.gle.softalarm'
+}
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+}
