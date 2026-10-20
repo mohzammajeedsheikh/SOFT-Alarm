@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="soft_peach_bg">#FFF5E9</color>
+    <color name="soft_peach_card">#FFEEDB</color>
+    <color name="soft_peach_dark">#FFDAB9</color>
+    <color name="text_dark">#3D2C2E</color>
+    <color name="text_light">#8A6D6F</color>
+    <color name="accent_orange">#FF8A5B</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>

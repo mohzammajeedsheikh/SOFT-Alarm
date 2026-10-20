@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/soft_peach_bg"
+    android:gravity="center"
+    android:padding="32dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="??"
+        android:textSize="80sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Good Morning"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_dark"
+        android:layout_marginTop="24dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Time to wake up softly"
+        android:textColor="@color/text_light"
+        android:layout_marginTop="8dp"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/dismissButton"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:text="Dismiss - I'm Awake"
+        android:layout_marginTop="80dp"
+        android:backgroundTint="@color/accent_orange" />
+
+</LinearLayout>
