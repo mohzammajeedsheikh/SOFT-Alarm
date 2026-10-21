@@ -1,6 +1,0 @@
-<resources>
-    <string name="app_name">SoftAlarm</string>
-    <string name="notification_text">Time to wake up gently</string>
-    <string name="alarm_set_status">Alarm set for %1$s - Soft &amp; Gentle</string>
-    <string name="alarm_set_toast">Alarm set! Will wake you softly</string>
-</resources>
