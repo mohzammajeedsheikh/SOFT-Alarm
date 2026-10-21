@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/soft_peach_bg"
+    android:padding="24dp"
+    android:gravity="center_horizontal">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SoftAlarm"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_dark"
+        android:layout_marginTop="40dp"
+        android:fontFamily="sans-serif-medium" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Wake up gently"
+        android:textSize="16sp"
+        android:textColor="@color/text_light"
+        android:layout_marginTop="8dp" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="60dp"
+        app:cardCornerRadius="32dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp"
+        app:cardBackgroundColor="@color/soft_peach_card">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="32dp"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/timeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="07:30 AM"
+                android:textSize="56sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_dark"
+                android:fontFamily="sans-serif-light" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/setTimeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Change Time"
+                android:textColor="@color/accent_orange"
+                app:strokeColor="@color/accent_orange"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                app:cornerRadius="20dp"
+                android:layout_marginTop="16dp" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/setAlarmButton"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:text="Set Alarm"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginTop="40dp"
+        app:cornerRadius="36dp"
+        app:backgroundTint="@color/accent_orange"
+        app:elevation="0dp" />
+
+    <TextView
+        android:id="@+id/statusText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No alarm set"
+        android:textColor="@color/text_light"
+        android:layout_marginTop="24dp"
+        android:textSize="14sp" />
+
+</LinearLayout>
