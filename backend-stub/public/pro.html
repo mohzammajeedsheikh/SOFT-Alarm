@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SoftAlarm Pro</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: linear-gradient(160deg,#FFF8F2,#FFDCC2,#FFB6AE);
+         min-height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center; color: #3D2C3A; }
+  .card { background: rgba(255,255,255,.75); border-radius: 24px; padding: 32px 24px; max-width: 380px; margin: 16px; text-align: center; }
+  h1 { margin: 0 0 8px; font-size: 26px; }
+  p { color: #7A5C6E; line-height: 1.5; }
+  button { background: #FF7A5C; color: #fff; border: 0; border-radius: 14px; padding: 14px 28px; font-size: 17px; font-weight: 600; cursor: pointer; }
+  small { display: block; margin-top: 16px; color: #9C7A9E; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>SoftAlarm Pro</h1>
+  <p>One-time payment. Unlocks every Pro voice. Pay by card or PayPal in your own currency.</p>
+  <button id="buy">Unlock Pro</button>
+  <p id="msg"></p>
+  <small>After paying, go back to the SoftAlarm app and tap "I've paid".<br>Payments are handled by Paddle, our merchant of record.</small>
+</div>
+
+<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+<script>
+  // ======= EDIT THESE (from your Paddle dashboard) =======
+  const PADDLE_ENV = 'sandbox';                 // use 'production' when you go live
+  const CLIENT_TOKEN = 'test_XXXXXXXXXXXXXXXX'; // Paddle > Developer tools > Authentication > client-side token
+  const PRICE_ID = 'pri_XXXXXXXXXXXXXXXX';      // Paddle > Catalog > your Pro price
+  // =======================================================
+
+  const device = new URLSearchParams(location.search).get('device') || '';
+  const msg = document.getElementById('msg');
+
+  if (PADDLE_ENV === 'sandbox') Paddle.Environment.set('sandbox');
+  Paddle.Initialize({
+    token: CLIENT_TOKEN,
+    eventCallback: function (e) {
+      if (e.name === 'checkout.completed') {
+        msg.textContent = 'Thank you! Now go back to the SoftAlarm app and tap "I\'ve paid".';
+      }
+    }
+  });
+
+  document.getElementById('buy').addEventListener('click', function () {
+    if (!/^[a-f0-9-]{8,64}$/i.test(device)) {
+      msg.textContent = 'Please open this page from the SoftAlarm app.';
+      return;
+    }
+    Paddle.Checkout.open({
+      items: [{ priceId: PRICE_ID, quantity: 1 }],
+      customData: { device_id: device }
+    });
+  });
+</script>
+</body>
+</html>

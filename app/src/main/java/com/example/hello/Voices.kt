@@ -1,0 +1,110 @@
+package com.example.hello
+
+// pro = true means the voice needs the one-time Pro unlock.
+data class Voice(val key: String, val label: String, val pro: Boolean) {
+    // Where the developer puts the mp3: app/src/main/assets/audio/<key>.mp3
+    val assetPath: String get() = "audio/$key.mp3"
+}
+
+// FREE: Default tone, "My own file" (picked from the phone), and 5 voices in English + Urdu:
+//       Mother, Father, Sister, Son, Teacher.   Everything else is Pro.
+// To change what is free, just change true/false below.
+// The "_ur" entries are separate Urdu recordings (not translations), each with its own mp3.
+object Voices {
+    val all: List<Voice> = listOf(
+        Voice("default", "Default alarm tone", false),
+        Voice("custom", "My own file (from phone)", false),
+        Voice("mother", "Mother", false),
+        Voice("father", "Father", false),
+        Voice("teacher", "Teacher", false),
+        Voice("brother", "Brother", true),
+        Voice("sister", "Sister", false),
+        Voice("son", "Son", false),
+        Voice("daughter", "Daughter", true),
+        Voice("husband", "Husband", true),
+        Voice("wife", "Wife", true),
+        Voice("friend", "Friend", true),
+        Voice("motivational", "Motivational", true),
+        Voice("worker", "Worker", true),
+        Voice("boss", "Boss", true),
+        Voice("azan", "Azan", true),
+        Voice("grandmother", "Grandmother", true),
+        Voice("grandfather", "Grandfather", true),
+        Voice("aunt", "Aunt", true),
+        Voice("uncle", "Uncle", true),
+        Voice("cousin", "Cousin", true),
+        Voice("niece", "Niece", true),
+        Voice("nephew", "Nephew", true),
+        Voice("elder_brother", "Elder Brother", true),
+        Voice("elder_sister", "Elder Sister", true),
+        Voice("younger_brother", "Younger Brother", true),
+        Voice("younger_sister", "Younger Sister", true),
+        Voice("baby", "Baby", true),
+        Voice("little_girl", "Little Girl", true),
+        Voice("little_boy", "Little Boy", true),
+        Voice("beloved", "Beloved", true),
+        Voice("best_friend", "Best Friend", true),
+        Voice("neighbor", "Neighbor", true),
+        Voice("mentor", "Mentor", true),
+        Voice("doctor", "Doctor", true),
+        Voice("nurse", "Nurse", true),
+        Voice("imam", "Imam", true),
+        Voice("scholar", "Scholar", true),
+        Voice("poet", "Poet", true),
+        Voice("storyteller", "Storyteller", true),
+        Voice("calm_voice", "Calm Voice", true),
+        Voice("gentle_whisper", "Gentle Whisper", true),
+        Voice("morning_dua", "Morning Dua", true),
+        Voice("quran", "Quran Recitation", true),
+        Voice("nature_sounds", "Nature Sounds", true),
+        Voice("stress_relief", "Stress Relief", true),
+        Voice("mother_ur", "والدہ محترمہ", false),
+        Voice("father_ur", "والد محترم", false),
+        Voice("teacher_ur", "استاد", false),
+        Voice("brother_ur", "بھائی", true),
+        Voice("sister_ur", "بہن", false),
+        Voice("son_ur", "بیٹا", false),
+        Voice("daughter_ur", "بیٹی", true),
+        Voice("husband_ur", "خاوند", true),
+        Voice("wife_ur", "بیوی", true),
+        Voice("friend_ur", "دوست", true),
+        Voice("motivational_ur", "حوصلہ افزا", true),
+        Voice("worker_ur", "کارکن", true),
+        Voice("boss_ur", "باس", true),
+        Voice("azan_ur", "اذان", true),
+        Voice("grandmother_ur", "دادی ماں", true),
+        Voice("grandfather_ur", "دادا جان", true),
+        Voice("aunt_ur", "خالہ", true),
+        Voice("uncle_ur", "چچا", true),
+        Voice("cousin_ur", "کزن", true),
+        Voice("niece_ur", "بھانجی", true),
+        Voice("nephew_ur", "بھانجا", true),
+        Voice("elder_brother_ur", "بڑے بھائی", true),
+        Voice("elder_sister_ur", "بڑی بہن", true),
+        Voice("younger_brother_ur", "چھوٹا بھائی", true),
+        Voice("younger_sister_ur", "چھوٹی بہن", true),
+        Voice("baby_ur", "ننھا بچہ", true),
+        Voice("little_girl_ur", "چھوٹی بچی", true),
+        Voice("little_boy_ur", "چھوٹا بچہ", true),
+        Voice("beloved_ur", "محبوب", true),
+        Voice("best_friend_ur", "بہترین دوست", true),
+        Voice("neighbor_ur", "پڑوسی", true),
+        Voice("mentor_ur", "رہنما", true),
+        Voice("doctor_ur", "ڈاکٹر", true),
+        Voice("nurse_ur", "نرس", true),
+        Voice("imam_ur", "امام صاحب", true),
+        Voice("scholar_ur", "عالم", true),
+        Voice("poet_ur", "شاعر", true),
+        Voice("storyteller_ur", "کہانی سنانے والا", true),
+        Voice("calm_voice_ur", "پرسکون آواز", true),
+        Voice("gentle_whisper_ur", "نرم سرگوشی", true),
+        Voice("morning_dua_ur", "صبح کی دعا", true),
+        Voice("quran_ur", "تلاوتِ قرآن", true),
+        Voice("nature_sounds_ur", "قدرتی آوازیں", true),
+        Voice("stress_relief_ur", "ذہنی سکون", true)
+    )
+
+    fun byKey(key: String): Voice? = all.firstOrNull { it.key == key }
+    fun isPro(key: String): Boolean = byKey(key)?.pro ?: false
+    fun labelFor(key: String): String = byKey(key)?.label ?: "Default alarm tone"
+}
