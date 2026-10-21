@@ -1,9 +1,0 @@
-<resources>
-    <style name="Theme.SoftAlarm" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/accent_orange</item>
-        <item name="android:windowBackground">@color/soft_peach_bg</item>
-        <item name="android:statusBarColor">@color/soft_peach_bg</item>
-        <item name="android:navigationBarColor">@color/soft_peach_bg</item>
-        <item name="android:windowLightStatusBar">true</item>
-    </style>
-</resources>
